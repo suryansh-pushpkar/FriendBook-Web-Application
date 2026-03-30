@@ -1,14 +1,17 @@
 package com.friendbook.dto;
 
-public class ProfileUpdateDTO {
+import org.springframework.web.multipart.MultipartFile;
+import lombok.Data;
 
+
+public class ProfileUpdateDTO {
     private String fullName;
     private String email;
     private String password;
-    private String profileImage;
     private String favSongs;
     private String favBooks;
     private String favPlaces;
+    private MultipartFile file;
 
     public String getFullName() {
         return fullName;
@@ -34,14 +37,6 @@ public class ProfileUpdateDTO {
         this.password = password;
     }
 
-    public String getProfileImage() {
-        return profileImage;
-    }
-
-    public void setProfileImage(String profileImage) {
-        this.profileImage = profileImage;
-    }
-
     public String getFavSongs() {
         return favSongs;
     }
@@ -64,5 +59,13 @@ public class ProfileUpdateDTO {
 
     public void setFavPlaces(String favPlaces) {
         this.favPlaces = favPlaces;
+    }
+
+    public MultipartFile getFile() {
+        return file;
+    }
+
+    public void setFile(MultipartFile file) {
+        this.file = file;
     }
 }

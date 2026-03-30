@@ -21,5 +21,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addRedirectViewController("/profile", "/login");
+        registry.addViewController("/favicon.ico").setViewName("forward:/favicon.svg");
     }
 }

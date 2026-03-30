@@ -1,11 +1,14 @@
 package com.friendbook.service;
 
+import java.nio.file.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.friendbook.dto.ProfileUpdateDTO;
 import com.friendbook.dto.UserDTO;
@@ -25,18 +28,60 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
+    // Define your assets directory path
+    private final String UPLOAD_DIR = "C:/Users/Admin/Desktop/Friendbook/assets/";
+
     public UserService(UserRepository userRepo, PostRepository postRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
         this.userRepo = userRepo;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
     }
+
     @Transactional
     public UserDTO registerUser(User user) {
         user.setUsername(UsernameUtil.generateUniqueUsername(user.getFullName(), userRepo));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User dbUser = userRepo.save(user);
         return modelMapper.map(dbUser, UserDTO.class);
+    }
+
+    // UPDATED: Now handles MultipartFile for drag-and-drop media
+    @Transactional
+    public Optional<User> updateProfile(String username, ProfileUpdateDTO dto, MultipartFile file) {
+        return userRepo.findByUsername(username).map(user -> {
+            if (dto.getFullName() != null) user.setFullName(normalize(dto.getFullName()));
+            if (dto.getFavSongs() != null) user.setFavSongs(normalize(dto.getFavSongs()));
+            if (dto.getFavBooks() != null) user.setFavBooks(normalize(dto.getFavBooks()));
+            if (dto.getFavPlaces() != null) user.setFavPlaces(normalize(dto.getFavPlaces()));
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                user.setPassword(passwordEncoder.encode(dto.getPassword().trim()));
+            }
+
+            if (file != null && !file.isEmpty()) {
+                try {
+                    String fileName = saveFile(file);
+                    user.setProfileImage(fileName);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to store profile media: " + e.getMessage());
+                }
+            }
+
+            return userRepo.save(user);
+        });
+    }
+
+    private String saveFile(MultipartFile file) throws Exception {
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(fileName);
+
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
     }
 
     public User authenticateUser(String email, String password) {
@@ -58,29 +103,15 @@ public class UserService {
         return postRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
-    @Transactional
-    public Optional<User> updateProfile(String username, ProfileUpdateDTO dto) {
-        return userRepo.findByUsername(username).map(user -> {
-            user.setFullName(normalize(dto.getFullName()));
-            user.setEmail(normalize(dto.getEmail()));
-            user.setProfileImage(normalize(dto.getProfileImage()));
-            user.setFavSongs(normalize(dto.getFavSongs()));
-            user.setFavBooks(normalize(dto.getFavBooks()));
-            user.setFavPlaces(normalize(dto.getFavPlaces()));
-
-            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-                user.setPassword(passwordEncoder.encode(dto.getPassword().trim()));
-            }
-
-            return userRepo.save(user);
-        });
-    }
-
     private String normalize(String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepo.findByEmail(email);
     }
 }

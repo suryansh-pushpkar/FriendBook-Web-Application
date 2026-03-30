@@ -54,4 +54,8 @@ public class PageController {
         model.addAttribute("followerCount", user.getFollowers() != null ? user.getFollowers().size() : 0);
         model.addAttribute("followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0);
     }
+    @GetMapping("/settings/profile")
+    public String showSettingsPage() {
+        return "edit-profile"; // The name of your new HTML file
+    }
 }
