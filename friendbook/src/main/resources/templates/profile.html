@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile | FriendBook</title>
+    <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
+    <style>
+        body {
+            background-color: #fafafa;
+        }
+
+        .profile-avatar-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-avatar-image,
+        .profile-avatar-fallback {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-avatar-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f09433, #dc2743 55%, #bc1888);
+            color: #fff;
+            font-size: 3.5rem;
+            font-weight: 700;
+        }
+
+        .post-media,
+        .post-fallback {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+        }
+
+        .post-media {
+            object-fit: cover;
+            display: block;
+        }
+
+        .post-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .section-label {
+            letter-spacing: 0.18em;
+            font-size: 0.8rem;
+        }
+
+        .modal-content {
+            border-radius: 1rem;
+        }
+
+        .form-control {
+            border-radius: 0.75rem;
+        }
+
+        @media (max-width: 767px) {
+            .profile-avatar-image,
+            .profile-avatar-fallback {
+                width: 120px;
+                height: 120px;
+            }
+
+            .profile-avatar-fallback {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: header}"></div>
+
+<main class="py-5">
+    <div class="container">
+        <section class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-4 p-lg-5">
+                <div class="row g-4 g-lg-5 align-items-center">
+                    <div class="col-md-4">
+                        <div class="profile-avatar-wrap">
+                            <img id="profileImageTag"
+                                 class="profile-avatar-image"
+                                 th:if="${user.profileImage != null and !user.profileImage.isEmpty()}"
+                                 th:src="@{|/assets/${user.profileImage}|}"
+                                 alt="Profile picture">
+                            <div id="profileFallbackAvatar"
+                                 class="profile-avatar-fallback"
+                                 th:if="${user.profileImage == null or user.profileImage.isEmpty()}"
+                                 th:text="${user.userName != null && !user.userName.isEmpty() ? user.userName.substring(0, 1).toUpperCase() : 'F'}">F</div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                            <h1 id="profileUsername" class="h2 fw-light mb-0" th:text="${user.userName}">friendbook</h1>
+                            <button type="button"
+                                    class="btn btn-outline-dark btn-sm px-3 py-2 fw-semibold"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editProfileModal">Edit profile</button>
+                        </div>
+
+                        <div class="row row-cols-3 g-3 mb-4 text-center text-md-start">
+                            <div class="col">
+                                <div class="bg-light border rounded-4 p-3 h-100">
+                                    <div class="fw-bold fs-5" th:text="${postCount}">0</div>
+                                    <div class="text-muted small">Posts</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="bg-light border rounded-4 p-3 h-100">
+                                    <div class="fw-bold fs-5" th:text="${followerCount}">0</div>
+                                    <div class="text-muted small">Followers</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="bg-light border rounded-4 p-3 h-100">
+                                    <div class="fw-bold fs-5" th:text="${followingCount}">0</div>
+                                    <div class="text-muted small">Following</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fw-bold fs-5 mb-1" id="profileFullName"
+                             th:text="${user.fullName != null && !user.fullName.isEmpty() ? user.fullName : 'Add your full name'}">Friend Book</div>
+                        <div class="text-muted mb-4" id="profileEmail"
+                             th:text="${user.email != null && !user.email.isEmpty() ? user.email : 'Add your email'}">user@example.com</div>
+
+                        <div class="row g-3">
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div>
+                                        <div id="profileFavSongs"
+                                             th:text="${user.favSongs != null && !user.favSongs.isEmpty() ? user.favSongs : 'Add your favorite songs'}">Add your favorite songs</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div>
+                                        <div id="profileFavBooks"
+                                             th:text="${user.favBooks != null && !user.favBooks.isEmpty() ? user.favBooks : 'Add your favorite books'}">Add your favorite books</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div>
+                                        <div id="profileFavPlaces"
+                                             th:text="${user.favPlaces != null && !user.favPlaces.isEmpty() ? user.favPlaces : 'Add your favorite places'}">Add your favorite places</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-header bg-white py-3">
+                <div class="text-center text-uppercase fw-bold text-muted section-label">Posts</div>
+            </div>
+
+            <div th:if="${posts != null and !posts.isEmpty()}" class="card-body p-4 p-lg-5 pt-0">
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4" th:each="post : ${posts}">
+                        <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                            <img class="post-media"
+                                 th:if="${post.mediaList != null and !post.mediaList.isEmpty()}"
+                                 th:src="@{|/assets/${post.mediaList[0].filePath}|}"
+                                 alt="Post media">
+                            <div class="post-fallback" th:if="${post.mediaList == null or post.mediaList.isEmpty()}">
+                                No image added for this post yet
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3"
+                                     th:text="${post.caption != null && !post.caption.isEmpty() ? post.caption : 'No caption added'}">Post caption</div>
+                                <div class="d-flex justify-content-between align-items-center gap-2 text-muted small">
+                                    <span class="badge text-bg-light border" th:text="${post.likes != null ? post.likes.size() : 0} + ' likes'">0 likes</span>
+                                    <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy')}">26 Mar 2026</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${posts == null or posts.isEmpty()}" class="card-body p-4 p-lg-5">
+                <div class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
+                    <h2 class="h4 mb-2">Share your first moment</h2>
+                    <p class="text-muted mb-0">Your posts will appear here in an Instagram-style grid once they are added.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h2 class="h4 mb-1">Edit profile</h2>
+                    <p class="text-muted mb-0">You can update everything except your username.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div id="profileUpdateMessage"></div>
+                <form id="editProfileForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="fullName">Full name</label>
+                            <input id="fullName" class="form-control" type="text" th:value="${user.fullName}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="email">Email</label>
+                            <input id="email" class="form-control" type="email" th:value="${user.email}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="profileImage">Profile image filename</label>
+                            <input id="profileImage" class="form-control" type="text" th:value="${user.profileImage}" placeholder="example: my-photo.jpg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="password">New password</label>
+                            <input id="password" class="form-control" type="password" placeholder="Leave blank to keep current password">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="favSongs">Favorite songs</label>
+                            <input id="favSongs" class="form-control" type="text" th:value="${user.favSongs}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="favBooks">Favorite books</label>
+                            <input id="favBooks" class="form-control" type="text" th:value="${user.favBooks}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" for="favPlaces">Favorite places</label>
+                            <input id="favPlaces" class="form-control" type="text" th:value="${user.favPlaces}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" for="username">Username</label>
+                            <input id="username" class="form-control" type="text" th:value="${user.userName}" disabled>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    const currentUsername = /*[[${user.userName}]]*/ 'friendbook';
+    const editProfileForm = document.getElementById('editProfileForm');
+    const profileUpdateMessage = document.getElementById('profileUpdateMessage');
+    const editProfileModal = document.getElementById('editProfileModal');
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(editProfileModal);
+
+    const setText = (id, value, fallback) => {
+        document.getElementById(id).textContent = value && value.trim() ? value : fallback;
+    };
+
+    const updateAvatar = (username, profileImage) => {
+        const imagePath = profileImage && profileImage.trim() ? `/assets/${profileImage.trim()}` : '';
+        const avatarContainer = document.querySelector('.profile-avatar-wrap');
+        let imageElement = document.getElementById('profileImageTag');
+        let fallbackElement = document.getElementById('profileFallbackAvatar');
+
+        if (imagePath) {
+            if (fallbackElement) {
+                fallbackElement.style.display = 'none';
+            }
+
+            if (imageElement) {
+                imageElement.src = imagePath;
+                imageElement.style.display = 'block';
+            } else {
+                const image = document.createElement('img');
+                image.id = 'profileImageTag';
+                image.className = 'profile-avatar-image';
+                image.alt = 'Profile picture';
+                image.src = imagePath;
+                avatarContainer.appendChild(image);
+            }
+            return;
+        }
+
+        if (imageElement) {
+            imageElement.style.display = 'none';
+        }
+
+        if (fallbackElement) {
+            fallbackElement.style.display = 'flex';
+            fallbackElement.textContent = username ? username.charAt(0).toUpperCase() : 'F';
+        } else {
+            const fallback = document.createElement('div');
+            fallback.id = 'profileFallbackAvatar';
+            fallback.className = 'profile-avatar-fallback';
+            fallback.textContent = username ? username.charAt(0).toUpperCase() : 'F';
+            avatarContainer.appendChild(fallback);
+        }
+    };
+
+    editProfileForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        profileUpdateMessage.innerHTML = '';
+
+        const submitButton = editProfileForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+
+        const payload = {
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            profileImage: document.getElementById('profileImage').value,
+            favSongs: document.getElementById('favSongs').value,
+            favBooks: document.getElementById('favBooks').value,
+            favPlaces: document.getElementById('favPlaces').value
+        };
+
+        try {
+            const response = await fetch(`/auth/profile/${currentUsername}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Unable to update profile');
+            }
+
+            setText('profileFullName', result.fullName, 'Add your full name');
+            setText('profileEmail', result.email, 'Add your email');
+            setText('profileFavSongs', result.favSongs, 'Add your favorite songs');
+            setText('profileFavBooks', result.favBooks, 'Add your favorite books');
+            setText('profileFavPlaces', result.favPlaces, 'Add your favorite places');
+            updateAvatar(result.username, result.profileImage);
+            document.getElementById('password').value = '';
+
+            profileUpdateMessage.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+            window.setTimeout(() => {
+                modalInstance.hide();
+                profileUpdateMessage.innerHTML = '';
+            }, 900);
+        } catch (error) {
+            profileUpdateMessage.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save changes';
+        }
+    });
+</script>
+</body>
+</html>
