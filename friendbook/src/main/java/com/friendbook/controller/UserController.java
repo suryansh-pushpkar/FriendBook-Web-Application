@@ -146,4 +146,15 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .body(new SignupResponse(false, "Too many signup attempts. Please try again later."));
     }
+    @GetMapping("/logout")
+    public String logout(HttpServletResponse response) {
+        Cookie jwtCookie = new Cookie("jwtToken", null);
+        jwtCookie.setPath("/");
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setMaxAge(0);
+
+        response.addCookie(jwtCookie);
+
+        return "redirect:/login?logout";
+    }
 }

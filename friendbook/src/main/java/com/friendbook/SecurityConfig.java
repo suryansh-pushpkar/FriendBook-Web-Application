@@ -1,6 +1,7 @@
 package com.friendbook;
 
 import com.friendbook.utility.JwtAuthenticationFilter;
+import jakarta.servlet.http.Cookie;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,14 +24,37 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/login", "/signup", "/css/**", "/js/**", "/images/**","/").permitAll()
+                        .requestMatchers("/auth/**", "/login", "/signup", "/css/**", "/js/**", "/images/**", "/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())
+
+                .headers(headers -> headers
+                        .cacheControl(cache -> cache.disable()) //  let Spring handle the "no-cache"
+                )
+
+                .logout(logout -> logout
+                        .logoutUrl("/auth/logout")
+                        .addLogoutHandler((request, response, authentication) -> {
+                            // Delete the JWT cookie
+                            Cookie cookie = new Cookie("jwtToken", null);
+                            cookie.setPath("/");
+                            cookie.setHttpOnly(true);
+                            cookie.setMaxAge(0);
+                            response.addCookie(cookie);
+                        })
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                )
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

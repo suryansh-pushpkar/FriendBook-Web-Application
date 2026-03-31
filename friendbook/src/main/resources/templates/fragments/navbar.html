@@ -1,26 +1,57 @@
-<nav th:fragment="header" class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
-    <div class="container">
-        <a class="navbar-brand brand-logo text-dark" th:href="@{/}">FriendBook</a>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<div th:fragment="header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+        <div class="container">
+            <a class="navbar-brand brand-logo text-dark" th:href="@{/}">FriendBook</a>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3" th:href="@{/about}">About</a>
-                </li>
-                <li class="nav-item ms-lg-2">
-                    <a class="btn btn-outline-primary btn-sm px-4" th:href="@{/login}">Login</a>
-                </li>
-                <li class="nav-item ms-lg-2">
-                    <a class="btn btn-primary btn-sm px-4" th:href="@{/signup}">Register</a>
-                </li>
-            </ul>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" th:href="@{/}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" th:href="@{/about}">About</a>
+                    </li>
+
+                    <li sec:authorize="isAnonymous()" class="nav-item ms-lg-2">
+                        <a class="btn btn-outline-primary btn-sm px-4" th:href="@{/login}">Login</a>
+                    </li>
+                    <li sec:authorize="isAnonymous()" class="nav-item ms-lg-2">
+                        <a class="btn btn-primary btn-sm px-4" th:href="@{/signup}">Register</a>
+                    </li>
+
+                    <li sec:authorize="isAuthenticated()" class="nav-item">
+                        <a class="nav-link px-3 fw-semibold text-primary"
+                           th:href="@{'/profile/' + ${#authentication.name}}">
+                            <i class="bi bi-person-circle me-1"></i> My Profile
+                        </a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()" class="nav-item ms-lg-2">
+                        <button class="btn btn-danger btn-sm px-4 fw-bold" onclick="handleLogout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
+    <script th:inline="javascript">
+        function handleLogout() {
+            // 1. Storage saaf karo
+            localStorage.removeItem('userProfile');
+            sessionStorage.removeItem('friendbookToken');
+
+            window.location.replace("/auth/logout");
+        }
+    </script>
+</div>
+
+</body>
+</html>

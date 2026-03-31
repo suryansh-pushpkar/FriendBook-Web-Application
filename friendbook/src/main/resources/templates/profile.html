@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Profile | FriendBook</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title th:text="${user.fullName + ' | FriendBook'}">Profile | FriendBook</title>
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
     <style>
-        body { background-color: #fafafa; }
+        /* Base Layout */
+        body {
+            background-color: #fafafa;
+            padding-bottom: 100px !important; /* Space so fixed footer doesn't cover content */
+        }
+
+        /* Avatar Styling */
         .profile-avatar-wrap { display: flex; justify-content: center; align-items: center; position: relative; }
         .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video {
             width: 170px; height: 170px; border-radius: 50%; object-fit: cover;
@@ -17,10 +24,45 @@
         }
         .section-label { letter-spacing: 0.18em; font-size: 0.8rem; }
 
+        /* Instagram Grid - Making it look professional */
+        .post-grid-item {
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background-color: #efefef;
+        }
+        .post-grid-item img, .post-grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .post-grid-item:hover img, .post-grid-item:hover video {
+            transform: scale(1.05);
+            filter: brightness(0.8);
+        }
+
+        /* Fixed Footer Overrides */
+        footer {
+            margin-top: 20px;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+
         @media (max-width: 767px) {
             .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video { width: 120px; height: 120px; }
             .profile-avatar-fallback { font-size: 2.5rem; }
+            body { padding-bottom: 80px !important; }
         }
+
+
     </style>
 </head>
 <body>
@@ -34,138 +76,75 @@
                 <div class="row g-4 g-lg-5 align-items-center">
                     <div class="col-md-4">
                         <div class="profile-avatar-wrap">
-                            <img id="profileImageTag" class="profile-avatar-image" style="display: none;" alt="Profile picture">
-                            <video id="profileVideoTag" class="profile-avatar-video" style="display: none;" autoplay muted loop></video>
-                            <div id="profileFallbackAvatar" class="profile-avatar-fallback" style="display: none;">F</div>
+                            <th:block th:with="isVid=${user.profileImage != null && (user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}">
+                                <video th:if="${isVid}" th:src="@{'/assets/' + ${user.profileImage}}" class="profile-avatar-video" autoplay muted loop></video>
+
+                                <img th:if="${!isVid && user.profileImage != null && user.profileImage != 'default.png'}"
+                                     th:src="@{'/assets/' + ${user.profileImage}}" class="profile-avatar-image" alt="Profile picture">
+
+                                <div th:if="${user.profileImage == null || user.profileImage == 'default.png'}"
+                                     class="profile-avatar-fallback"
+                                     th:text="${user.usernameField != null ? user.usernameField.substring(0,1).toUpperCase() : 'F'}">F</div>
+                            </th:block>
                         </div>
                     </div>
+
                     <div class="col-md-8">
                         <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-                            <h1 id="profileUsername" class="h2 fw-light mb-0">friendbook</h1>
-                            <a href="/settings/profile" class="btn btn-outline-dark btn-sm px-3 py-2 fw-semibold">Edit profile</a>
+                            <h1 class="h2 fw-light mb-0" th:text="${user.usernameField}">friendbook</h1>
+                            <a th:href="@{/settings/profile}" class="btn btn-outline-dark btn-sm px-3 py-2 fw-semibold">Edit profile</a>
                         </div>
 
                         <div class="row row-cols-3 g-3 mb-4 text-center text-md-start">
-                            <div class="col">
-                                <div class="bg-light border rounded-4 p-3 h-100">
-                                    <div id="displayPostCount" class="fw-bold fs-5">0</div>
-                                    <div class="text-muted small">Posts</div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="bg-light border rounded-4 p-3 h-100">
-                                    <div id="displayFollowerCount" class="fw-bold fs-5">0</div>
-                                    <div class="text-muted small">Followers</div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="bg-light border rounded-4 p-3 h-100">
-                                    <div id="displayFollowingCount" class="fw-bold fs-5">0</div>
-                                    <div class="text-muted small">Following</div>
-                                </div>
-                            </div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${postCount}">0</div><div class="text-muted small">Posts</div></div></div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${followerCount}">0</div><div class="text-muted small">Followers</div></div></div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${followingCount}">0</div><div class="text-muted small">Following</div></div></div>
                         </div>
 
-                        <div class="fw-bold fs-5 mb-1" id="profileFullName">Friend Book</div>
-                        <div class="text-muted mb-4" id="profileEmail">user@example.com</div>
+                        <div class="fw-bold fs-5 mb-1" th:text="${user.fullName}">Friend Book</div>
+                        <div class="text-muted mb-4" th:text="${user.email}">user@example.com</div>
 
                         <div class="row g-3">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="card bg-light border-0 rounded-4 h-100">
-                                    <div class="card-body">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div>
-                                        <div id="profileFavSongs">Add your favorite songs</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="card bg-light border-0 rounded-4 h-100">
-                                    <div class="card-body">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div>
-                                        <div id="profileFavBooks">Add your favorite books</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="card bg-light border-0 rounded-4 h-100">
-                                    <div class="card-body">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div>
-                                        <div id="profileFavPlaces">Add your favorite places</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div><div th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div></div></div></div>
+                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div><div th:text="${user.favBooks ?: 'Add favorite books'}">Books</div></div></div></div>
+                            <div class="col-lg-4"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div><div th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div></div></div></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 border-top">
                 <div class="text-center text-uppercase fw-bold text-muted section-label">Posts</div>
             </div>
 
-            <div id="postsContainer" class="card-body p-4 p-lg-5 pt-0">
-                <div class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
-                    <h2 class="h4 mb-2">No posts yet</h2>
+            <div id="postsContainer" class="card-body p-2 p-md-4">
+                <div th:if="${#lists.isEmpty(posts)}" class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
+                    <i class="bi bi-camera fs-1 text-muted"></i>
+                    <h2 class="h4 mt-3 mb-2">No posts yet</h2>
                     <p class="text-muted mb-0">Moments you share will appear here.</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(posts)}" class="row g-1 g-md-3">
+                    <div th:each="post : ${posts}" class="col-4">
+                        <div class="post-grid-item rounded-2">
+                            <th:block th:if="${!#lists.isEmpty(post.mediaList)}">
+                                <th:block th:with="firstMedia=${post.mediaList[0].filePath}">
+                                    <video th:if="${firstMedia.endsWith('.mp4') || firstMedia.endsWith('.webm')}"
+                                           th:src="@{'/assets/' + ${firstMedia}}" muted></video>
+                                    <img th:if="${!firstMedia.endsWith('.mp4') && !firstMedia.endsWith('.webm')}"
+                                         th:src="@{'/assets/' + ${firstMedia}}">
+                                </th:block>
+                            </th:block>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 </main>
-
+<footer>
+<div th:replace="~{fragments/footer :: bottom-nav}" style="position: fixed"></div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const setText = (id, value, fallback) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value && value.trim() ? value : fallback;
-    };
-
-    const updateAvatar = (username, profileMedia) => {
-        const imageElement = document.getElementById('profileImageTag');
-        const videoElement = document.getElementById('profileVideoTag');
-        const fallbackElement = document.getElementById('profileFallbackAvatar');
-
-        // Reset display
-        imageElement.style.display = 'none';
-        videoElement.style.display = 'none';
-        fallbackElement.style.display = 'none';
-
-        if (profileMedia && profileMedia !== 'default.png') {
-            const extension = profileMedia.split('.').pop().toLowerCase();
-            const videoExtensions = ['mp4', 'webm', 'ogg'];
-
-            if (videoExtensions.includes(extension)) {
-                videoElement.src = `/assets/${profileMedia}`;
-                videoElement.style.display = 'block';
-            } else {
-                imageElement.src = `/assets/${profileMedia}`;
-                imageElement.style.display = 'block';
-            }
-        } else {
-            fallbackElement.style.display = 'flex';
-            fallbackElement.textContent = username ? username.charAt(0).toUpperCase() : 'F';
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedProfile = localStorage.getItem('userProfile');
-        if (savedProfile) {
-            const profile = JSON.parse(savedProfile);
-
-            setText('profileUsername', profile.username, 'friendbook');
-            setText('profileFullName', profile.fullName, 'Friend Book');
-            setText('profileEmail', profile.email, 'user@example.com');
-            setText('profileFavSongs', profile.favSongs, 'Add your favorite songs');
-            setText('profileFavBooks', profile.favBooks, 'Add your favorite books');
-            setText('profileFavPlaces', profile.favPlaces, 'Add your favorite places');
-
-            document.getElementById('displayPostCount').textContent = profile.postCount || 0;
-            document.getElementById('displayFollowerCount').textContent = profile.followerCount || 0;
-            document.getElementById('displayFollowingCount').textContent = profile.followingCount || 0;
-
-            updateAvatar(profile.username, profile.profileImage);
-        }
-    });
-</script>
 </body>
 </html>

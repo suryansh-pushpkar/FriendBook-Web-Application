@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<div xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+    <div th:fragment="bottom-nav">
+        <footer class="footer mt-5 py-4 bg-white border-top">
+            <div class="container" >
+                <div class="row align-items-center">
+
+                    <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+                        <span class="text-muted fw-bold">FriendBook &copy; 2026</span>
+                    </div>
+
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <div class="d-flex justify-content-center gap-4">
+                            <a th:href="@{/explore}" class="text-dark">
+                                <i class="fa-solid fa-compass fs-4"></i>
+                            </a>
+
+                            <a th:href="@{/search}" class="text-dark">
+                                <i class="fa-solid fa-magnifying-glass fs-4"></i>
+                            </a>
+
+                            <a href="javascript:void(0)" class="text-dark" data-bs-toggle="modal" data-bs-target="#uploadPostModal">
+                                <i class="fa-solid fa-square-plus fs-4"></i>
+                            </a>
+
+                            <a th:href="@{/notifications}" class="text-dark position-relative">
+                                <i class="fa-solid fa-heart fs-4"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size: 0.6rem; padding: 0.35em 0.5em;">2</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center text-md-end">
+                        <a th:href="@{'/profile/' + ${#authentication.name}}" class="text-decoration-none text-dark fw-semibold">
+                            <i class="fa-solid fa-circle-user me-1"></i> My Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <div class="modal fade" id="uploadPostModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title w-100 text-center fw-bold">Create new post</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="createPostForm" enctype="multipart/form-data">
+                            <div id="postDropZone" class="border border-2 border-dashed rounded-4 p-5 text-center bg-light mb-3" style="cursor: pointer;">
+                                <i class="fa-solid fa-cloud-arrow-up fs-1 text-primary"></i>
+                                <p class="mt-2 mb-0 fw-semibold">Select photos and videos</p>
+                                <input type="file" id="postFiles" name="files" multiple accept="image/*,video/*" hidden>
+                            </div>
+                            <div id="postPreviewContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
+                            <div class="mb-3">
+                                <textarea id="postCaption" class="form-control border-0 bg-light rounded-3" rows="3" placeholder="Write a caption..."></textarea>
+                            </div>
+                            <button type="submit" id="shareBtn" class="btn btn-primary w-100 py-2 fw-bold">Share</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            (function() {
+                const dropZone = document.getElementById('postDropZone');
+                const fileInput = document.getElementById('postFiles');
+                const preview = document.getElementById('postPreviewContainer');
+                let selectedFiles = [];
+
+                if(dropZone) {
+                    dropZone.addEventListener('click', () => fileInput.click());
+                    fileInput.addEventListener('change', (e) => {
+                        Array.from(e.target.files).forEach(file => {
+                            selectedFiles.push(file);
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                const img = document.createElement('img');
+                                img.src = ev.target.result;
+                                img.style.cssText = "width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;";
+                                preview.appendChild(img);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    });
+                }
+
+                document.getElementById('createPostForm')?.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('shareBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = 'Sharing...';
+
+                    const formData = new FormData();
+                    formData.append('caption', document.getElementById('postCaption').value);
+                    selectedFiles.forEach(file => formData.append('files', file));
+
+                    try {
+                        const response = await fetch('/post/create', { method: 'POST', body: formData });
+                        if (response.ok) location.reload();
+                    } catch (err) {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Share';
+                    }
+                });
+            })();
+        </script>
+    </div>
+</div>
+</div>

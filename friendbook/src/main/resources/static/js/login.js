@@ -45,7 +45,6 @@ $(document).ready(function () {
                     if (response.redirectUrl) {
                         window.location.href = response.redirectUrl;
                     } else {
-                        // Fallback to username if redirectUrl is missing
                         const username = response.userProfile ? response.userProfile.username : 'friendbook';
                         window.location.href = '/profile/' + username;
                     }

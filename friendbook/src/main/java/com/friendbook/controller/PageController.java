@@ -1,5 +1,6 @@
 package com.friendbook.controller;
 
+import com.friendbook.entity.Post;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.friendbook.entity.User;
 import com.friendbook.service.UserService;
+
+import java.util.List;
 
 @Controller
 public class PageController {
@@ -37,15 +40,6 @@ public class PageController {
         return "index";
     }
 
-    @GetMapping("/profile/{username}")
-    public String showProfilePage(@PathVariable String username, Model model) {
-        return userService.findByUsername(username)
-                .map(user -> {
-                    populateProfileModel(model, user);
-                    return "profile";
-                })
-                .orElse("redirect:/login?error=notfound");
-    }
 
     private void populateProfileModel(Model model, User user) {
         model.addAttribute("user", user);
@@ -56,6 +50,37 @@ public class PageController {
     }
     @GetMapping("/settings/profile")
     public String showSettingsPage() {
-        return "edit-profile"; // The name of your new HTML file
+        return "edit-profile";
+    }
+    @GetMapping("/profile/{identifier}")
+    public String showProfilePage(@PathVariable String identifier, Model model) {
+        User user = userService.findByUsername(identifier)
+                .orElseGet(() -> userService.findByEmail(identifier)
+                        .orElseThrow(() -> new RuntimeException("User not found")));
+
+        List<Post> userPosts = userService.findPostsByUser(user);
+
+        model.addAttribute("user", user);
+        model.addAttribute("posts", userPosts);
+        model.addAttribute("postCount", userPosts.size());
+        model.addAttribute("followerCount", user.getFollowers().size());
+        model.addAttribute("followingCount", user.getFollowing().size());
+
+        return "profile";
+    }
+
+    @GetMapping("/explore")
+    public String explorePage() {
+        return "explore";
+    }
+
+    @GetMapping("/search")
+    public String searchPage() {
+        return "search";
+    }
+
+    @GetMapping("/notifications")
+    public String notificationsPage() {
+        return "notifications";
     }
 }
