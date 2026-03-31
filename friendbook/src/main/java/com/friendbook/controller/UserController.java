@@ -72,7 +72,6 @@ public class UserController {
         userProfile.setFollowingCount(user.getFollowing() != null ? user.getFollowing().size() : 0);
         userProfile.setPostCount(user.getPosts() != null ? user.getPosts().size() : 0);
 
-        // 6. Build Final Response
         Map<String, Object> hm = new HashMap<>();
         hm.put("message", "Sign in success");
         hm.put("token", token);

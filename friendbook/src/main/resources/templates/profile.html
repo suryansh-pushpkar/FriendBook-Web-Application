@@ -5,10 +5,10 @@
     <title th:text="${user.fullName + ' | FriendBook'}">Profile | FriendBook</title>
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
     <style>
-        /* Base Layout */
         body {
+            margin-bottom: 60px;
             background-color: #fafafa;
-            padding-bottom: 100px !important; /* Space so fixed footer doesn't cover content */
+            padding-bottom: 100px !important;
         }
 
         /* Avatar Styling */
@@ -24,7 +24,7 @@
         }
         .section-label { letter-spacing: 0.18em; font-size: 0.8rem; }
 
-        /* Instagram Grid - Making it look professional */
+        /* Instagram Grid*/
         .post-grid-item {
             aspect-ratio: 1 / 1;
             overflow: hidden;
@@ -43,7 +43,6 @@
             filter: brightness(0.8);
         }
 
-        /* Fixed Footer Overrides */
         footer {
             margin-top: 20px;
             position: fixed;
