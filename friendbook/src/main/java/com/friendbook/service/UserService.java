@@ -1,9 +1,7 @@
 package com.friendbook.service;
 
 import java.nio.file.*;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,7 +26,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
-    // Define your assets directory path
     private final String UPLOAD_DIR = "C:/Users/Admin/Desktop/Friendbook/assets/";
 
     public UserService(UserRepository userRepo, PostRepository postRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
@@ -36,6 +33,13 @@ public class UserService {
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
+    }
+
+    public Set<User> searchUsers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+        return userRepo.findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCase(query, query);
     }
 
     @Transactional
@@ -46,7 +50,34 @@ public class UserService {
         return modelMapper.map(dbUser, UserDTO.class);
     }
 
-    // UPDATED: Now handles MultipartFile for drag-and-drop media
+    public User findByIdentifier(String identifier) {
+        return userRepo.findByUsername(identifier)
+                .orElseGet(() -> userRepo.findByEmail(identifier)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + identifier)));
+    }
+@Transactional
+    public boolean toggleFollow(Long targetUserId, String currentUserName){
+        User currentUser = userRepo.findByEmail(currentUserName).orElseThrow(() -> new RuntimeException(" user not found: " + currentUserName));
+        User targetUser = userRepo.findById(targetUserId).orElseThrow(() -> new RuntimeException("Target user not found: " + targetUserId));
+        if(currentUser.getId().equals(targetUser.getId())){
+            throw new RuntimeException("Cannot follow yourself");
+        }
+        boolean isNowFollowing;
+        if(currentUser.getFollowing().contains(targetUser)){
+            currentUser.getFollowing().remove(targetUser);
+            targetUser.getFollowers().remove(currentUser);
+            isNowFollowing = false;
+        } else {
+            currentUser.getFollowing().add(targetUser);
+            targetUser.getFollowers().add(currentUser);
+            isNowFollowing = true;
+        }
+        userRepo.save(currentUser);
+        return isNowFollowing;
+    }
+
+
+
     @Transactional
     public Optional<User> updateProfile(String username, ProfileUpdateDTO dto, MultipartFile file) {
         return userRepo.findByUsername(username).map(user -> {

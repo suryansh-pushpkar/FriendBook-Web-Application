@@ -1,6 +1,7 @@
 package com.friendbook.controller;
 
 import com.friendbook.entity.Post;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,8 +9,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.friendbook.entity.User;
 import com.friendbook.service.UserService;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 public class PageController {
@@ -40,7 +44,23 @@ public class PageController {
         return "index";
     }
 
+    @GetMapping("/search")
+    public String searchUsers(
+            @RequestParam(value = "query", required = false) String query,
+            HttpServletRequest request,
+            Model model) {
 
+        if (query != null && !query.trim().isEmpty()) {
+            Set<User> searchResults = userService.searchUsers(query);
+            model.addAttribute("users", searchResults);
+            model.addAttribute("query", query);
+        }
+        String requestedWith = request.getHeader("X-Requested-With");
+        if ("XMLHttpRequest".equals(requestedWith)) {
+            return "fragments/search-results :: resultsList";
+        }
+        return "search";
+    }
     private void populateProfileModel(Model model, User user) {
         model.addAttribute("user", user);
         model.addAttribute("posts", userService.findPostsByUser(user));
@@ -52,19 +72,23 @@ public class PageController {
     public String showSettingsPage() {
         return "edit-profile";
     }
+
+
     @GetMapping("/profile/{identifier}")
-    public String showProfilePage(@PathVariable String identifier, Model model) {
-        User user = userService.findByUsername(identifier)
-                .orElseGet(() -> userService.findByEmail(identifier)
-                        .orElseThrow(() -> new RuntimeException("User not found")));
+    public String showProfile(@PathVariable String identifier, Model model, Principal principal) {
+        User targetUser = userService.findByIdentifier(identifier);
+        String loggedInEmail = principal.getName();
+        User visitor = userService.findByEmail(loggedInEmail).get();
+boolean isOwnProfile = visitor.getId().equals(targetUser.getId());
+        boolean isFollowing = visitor.getFollowing().contains(targetUser);
 
-        List<Post> userPosts = userService.findPostsByUser(user);
+        model.addAttribute("user", targetUser);
+        model.addAttribute("isOwnProfile", isOwnProfile);
+        model.addAttribute("isFollowing", isFollowing);
 
-        model.addAttribute("user", user);
-        model.addAttribute("posts", userPosts);
-        model.addAttribute("postCount", userPosts.size());
-        model.addAttribute("followerCount", user.getFollowers().size());
-        model.addAttribute("followingCount", user.getFollowing().size());
+        model.addAttribute("postCount", targetUser.getPosts().size());
+        model.addAttribute("followerCount", targetUser.getFollowers().size());
+        model.addAttribute("followingCount", targetUser.getFollowing().size());
 
         return "profile";
     }
@@ -72,11 +96,6 @@ public class PageController {
     @GetMapping("/explore")
     public String explorePage() {
         return "explore";
-    }
-
-    @GetMapping("/search")
-    public String searchPage() {
-        return "search";
     }
 
     @GetMapping("/notifications")

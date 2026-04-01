@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<div xmlns:th="http://www.thymeleaf.org">
+
+
+<div th:fragment="profile-buttons(targetUser, isOwnProfile, isFollowing)">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+
+        <h1 class="h2 fw-light mb-0" th:text="${targetUser.usernameField}">username</h1>
+
+        <div th:if="${isOwnProfile}">
+            <a th:href="@{/settings/profile}" class="btn btn-outline-dark btn-sm px-4 py-2 fw-semibold">
+                <i class="fa-solid fa-user-pen me-1"></i> Edit Profile
+            </a>
+        </div>
+
+        <div th:unless="${isOwnProfile}" class="d-flex gap-2">
+
+            <button th:if="${!isFollowing}"
+                    type="button"
+                    class="btn btn-primary btn-sm px-4 py-2 fw-bold"
+                    th:onclick="'toggleFollow(this, ' + ${targetUser.id} + ')'">
+                Follow
+            </button>
+
+            <button th:if="${isFollowing}"
+                    type="button"
+                    class="btn btn-light border btn-sm px-4 py-2 fw-bold text-dark"
+                    th:onclick="'toggleFollow(this, ' + ${targetUser.id} + ')'">
+                Unfollow
+            </button>
+
+
+        </div>
+
+    </div>
+</div>
+
+
+</div>

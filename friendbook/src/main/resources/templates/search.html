@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Search Friends | FriendBook</title>
+    <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { background-color: #fafafa; display: flex; flex-direction: column; min-height: 100vh; }
+        main { flex: 1; }
+        .search-wrapper { max-width: 600px; margin: 0 auto; width: 100%; }
+
+        .search-bar-inner {
+            background: #efefef;
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: border 0.2s;
+        }
+        /* Highlight search bar when focused */
+        .search-bar-inner:focus-within {
+            border: 1px solid #dbdbdb;
+            background: #fff;
+        }
+
+        .search-bar-inner input {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            margin-left: 10px;
+        }
+        .search-bar-inner input:focus { background: transparent; box-shadow: none; }
+
+        .user-item {
+            transition: background 0.2s;
+            border-bottom: 1px solid #efefef;
+        }
+        .user-item:hover { background-color: #f8f9fa; }
+
+        .avatar-circle {
+            width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
+            border: 1px solid #dbdbdb;
+            background-color: #eee;
+        }
+        .btn-view { font-weight: 600; font-size: 0.85rem; border-radius: 8px; }
+
+        /* Loading state overlay */
+        .loading-overlay { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: header}"></div>
+
+<main class="py-4">
+    <div class="container search-wrapper">
+        <div class="mb-4">
+            <form th:action="@{/search}" method="get" id="searchForm">
+                <div class="search-bar-inner">
+                    <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    <input type="text" id="searchInput" name="query"
+                           class="form-control" th:value="${query}"
+                           placeholder="Search by name or username..." autocomplete="off">
+                </div>
+            </form>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="list-group list-group-flush" id="resultsList">
+
+                <div th:each="sUser : ${users}" class="list-group-item user-item p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <a th:href="@{'/profile/' + ${sUser.usernameField}}" class="d-flex align-items-center text-decoration-none text-dark">
+                            <img th:src="${(sUser.profileImage != null && sUser.profileImage != 'default.png') ? '/assets/' + sUser.profileImage : '/assets/default-user.png'}"
+                                 class="avatar-circle me-3" alt="User Avatar">
+                            <div>
+                                <h6 class="mb-0 fw-bold" th:text="${sUser.usernameField}">username</h6>
+                                <small class="text-muted" th:text="${sUser.fullName}">Full Name</small>
+                            </div>
+                        </a>
+                        <a th:href="@{'/profile/' + ${sUser.usernameField}}" class="btn btn-outline-primary btn-sm px-3 btn-view">View Profile</a>
+                    </div>
+                </div>
+
+                <div th:if="${query != null && !query.isEmpty() && #lists.isEmpty(users)}" class="text-center py-5">
+                    <i class="fa-solid fa-circle-question fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">No users found matching "<strong th:text="${query}"></strong>"</p>
+                </div>
+
+                <div th:if="${query == null || query.isEmpty()}" class="text-center py-5">
+                    <i class="fa-solid fa-users fs-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">Search for Friends</h5>
+                    <p class="small text-muted px-4">Find colleagues and friends by typing their name.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: bottom-nav}"></div>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const searchForm = document.getElementById('searchForm');
+        const resultsList = document.getElementById('resultsList');
+        let debounceTimer;
+
+        const val = searchInput.value;
+        searchInput.value = '';
+        searchInput.focus();
+        searchInput.value = val;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const query = searchInput.value.trim();
+                if (query === /*[[${query}]]*/ '') return;
+                resultsList.classList.add('loading-overlay');
+                searchForm.submit();
+            }, 600);
+        });
+        searchForm.addEventListener('submit', function() {
+            resultsList.classList.add('loading-overlay');
+        });
+    });
+</script>
+
+</body>
+</html>
