@@ -40,7 +40,6 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    @RateLimiter(name = "authLimiter", fallbackMethod = "loginRateLimitFallback")
     public ResponseEntity<?> userLogin(@RequestBody UserLoginDTO dto, HttpServletResponse response) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword()));
 
@@ -82,7 +81,6 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    @RateLimiter(name = "authLimiter", fallbackMethod = "signupRateLimitFallback")
     public ResponseEntity<SignupResponse> signup(@RequestBody UserDTO dto) {
         boolean captchaVerified = CaptchaUtil.verifyCaptcha(dto.getCaptchaToken());
         if (!captchaVerified) {

@@ -45,10 +45,7 @@ public class PageController {
     }
 
     @GetMapping("/search")
-    public String searchUsers(
-            @RequestParam(value = "query", required = false) String query,
-            HttpServletRequest request,
-            Model model) {
+    public String searchUsers(@RequestParam(value = "query", required = false) String query, HttpServletRequest request, Model model) {
 
         if (query != null && !query.trim().isEmpty()) {
             Set<User> searchResults = userService.searchUsers(query);
@@ -73,6 +70,10 @@ public class PageController {
         return "edit-profile";
     }
 
+    @GetMapping("/post/upload")
+    public String showCreatePostPage() {
+        return "create-post";
+    }
 
     @GetMapping("/profile/{identifier}")
     public String showProfile(@PathVariable String identifier, Model model, Principal principal) {
@@ -85,7 +86,7 @@ boolean isOwnProfile = visitor.getId().equals(targetUser.getId());
         model.addAttribute("user", targetUser);
         model.addAttribute("isOwnProfile", isOwnProfile);
         model.addAttribute("isFollowing", isFollowing);
-
+        model.addAttribute("posts", targetUser.getPosts());
         model.addAttribute("postCount", targetUser.getPosts().size());
         model.addAttribute("followerCount", targetUser.getFollowers().size());
         model.addAttribute("followingCount", targetUser.getFollowing().size());

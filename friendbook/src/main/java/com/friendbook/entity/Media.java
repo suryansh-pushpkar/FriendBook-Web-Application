@@ -8,6 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 @Data
 @Entity
 @Table(name = "medias")
@@ -21,6 +24,8 @@ public class Media {
 
     @ManyToOne
     @JoinColumn(name = "post_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Post post;
 
 }

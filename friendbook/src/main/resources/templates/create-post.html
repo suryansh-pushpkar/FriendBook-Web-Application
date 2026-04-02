@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create New Post | FriendBook</title>
+    <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <style>
+        .upload-container { max-width: 600px; margin: 40px auto; }
+        .upload-box {
+            border: 2px dashed #dbdbdb; border-radius: 12px;
+            padding: 60px 20px; text-align: center;
+            background: #fff; cursor: pointer; transition: 0.3s;
+        }
+        .upload-box:hover { background: #fafafa; border-color: #0095f6; }
+        .preview-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px; margin-top: 20px;
+        }
+        .preview-item {
+            width: 100px; height: 100px; object-fit: cover;
+            border-radius: 8px; border: 1px solid #efefef;
+        }
+        textarea.form-control { border-radius: 12px; border: 1px solid #dbdbdb; resize: none; }
+    </style>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/navbar :: header}"></div>
+
+<main class="container-fluid upload-container">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4">Create New Post</h5>
+            <form id="postForm">
+                <div id="uploadBox" class="upload-box">
+                    <i class="fa-solid fa-images fs-1 text-primary mb-2"></i>
+                    <p class="mb-0 fs-5">Click here to select photos or videos</p>
+                    <input type="file" id="fileInput" name="files" multiple hidden accept="image/*,video/*">
+                </div>
+
+                <div id="previewGrid" class="preview-grid"></div>
+
+                <div class="mt-4">
+                    <label class="form-label fw-bold">Caption</label>
+                    <textarea id="caption" class="form-control" rows="3" placeholder="Write a caption..."></textarea>
+                </div>
+
+                <div class="mt-4 d-grid">
+                    <button type="submit" id="submitBtn" class="btn btn-primary fw-bold py-2">Share Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        const $uploadBox = $('#uploadBox');
+        const $fileInput = $('#fileInput');
+        const $previewGrid = $('#previewGrid');
+        let selectedFiles = [];
+        $uploadBox.on('click', function(e) {
+            if (e.target.id !== 'fileInput') {
+                $fileInput.click();
+            }
+        });
+        $fileInput.on('change', function(e) {
+            handleFiles(Array.from(e.target.files));
+        });
+        function handleFiles(files) {
+            files.forEach(file => {
+                selectedFiles.push(file);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let html = '';
+                    if (file.type.startsWith('image/')) {
+                        html = `<img src="${e.target.result}" class="preview-item">`;
+                    } else {
+                        html = `<video src="${e.target.result}" class="preview-item"></video>`;
+                    }
+                    $previewGrid.append(html);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+        $('#postForm').on('submit', function(e) {
+            e.preventDefault();
+            const $btn = $('#submitBtn');
+            $btn.prop('disabled', true).text('Uploading...');
+
+            const formData = new FormData();
+            formData.append('caption', $('#caption').val());
+            selectedFiles.forEach(file => formData.append('files', file));
+
+            $.ajax({
+                url: '/posts/create',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
+                success: function(res) {
+                    window.location.href = '/profile/' + res.username;
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr);
+                    alert('Upload failed! Error Code: ' + xhr.status + '\nMessage: ' + xhr.responseText);
+                    $btn.prop('disabled', false).text('Share Post');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

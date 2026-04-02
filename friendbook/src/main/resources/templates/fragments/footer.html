@@ -20,7 +20,7 @@
                                 <i class="fa-solid fa-magnifying-glass fs-4"></i>
                             </a>
 
-                            <a href="javascript:void(0)" class="text-dark" data-bs-toggle="modal" data-bs-target="#uploadPostModal">
+                            <a th:href="@{/post/upload}" class="text-dark" >
                                 <i class="fa-solid fa-square-plus fs-4"></i>
                             </a>
 
@@ -41,30 +41,30 @@
             </div>
         </footer>
 
-        <div class="modal fade" id="uploadPostModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content rounded-4 border-0 shadow">
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title w-100 text-center fw-bold">Create new post</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <form id="createPostForm" enctype="multipart/form-data">
-                            <div id="postDropZone" class="border border-2 border-dashed rounded-4 p-5 text-center bg-light mb-3" style="cursor: pointer;">
-                                <i class="fa-solid fa-cloud-arrow-up fs-1 text-primary"></i>
-                                <p class="mt-2 mb-0 fw-semibold">Select photos and videos</p>
-                                <input type="file" id="postFiles" name="files" multiple accept="image/*,video/*" hidden>
-                            </div>
-                            <div id="postPreviewContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
-                            <div class="mb-3">
-                                <textarea id="postCaption" class="form-control border-0 bg-light rounded-3" rows="3" placeholder="Write a caption..."></textarea>
-                            </div>
-                            <button type="submit" id="shareBtn" class="btn btn-primary w-100 py-2 fw-bold">Share</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!--        <div class="modal fade" id="uploadPostModal" tabindex="-1" aria-hidden="true">-->
+<!--            <div class="modal-dialog modal-dialog-centered">-->
+<!--                <div class="modal-content rounded-4 border-0 shadow">-->
+<!--                    <div class="modal-header border-bottom-0 pb-0">-->
+<!--                        <h5 class="modal-title w-100 text-center fw-bold">Create new post</h5>-->
+<!--                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+<!--                    </div>-->
+<!--                    <div class="modal-body p-4">-->
+<!--                        <form id="createPostForm" enctype="multipart/form-data">-->
+<!--                            <div id="postDropZone" class="border border-2 border-dashed rounded-4 p-5 text-center bg-light mb-3" style="cursor: pointer;">-->
+<!--                                <i class="fa-solid fa-cloud-arrow-up fs-1 text-primary"></i>-->
+<!--                                <p class="mt-2 mb-0 fw-semibold">Select photos and videos</p>-->
+<!--                                <input type="file" id="postFiles" name="files" multiple accept="image/*,video/*" hidden>-->
+<!--                            </div>-->
+<!--                            <div id="postPreviewContainer" class="d-flex flex-wrap gap-2 mb-3"></div>-->
+<!--                            <div class="mb-3">-->
+<!--                                <textarea id="postCaption" class="form-control border-0 bg-light rounded-3" rows="3" placeholder="Write a caption..."></textarea>-->
+<!--                            </div>-->
+<!--                            <button type="submit" id="shareBtn" class="btn btn-primary w-100 py-2 fw-bold">Share</button>-->
+<!--                        </form>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
 
         <script th:inline="javascript">
             (function() {

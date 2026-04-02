@@ -78,18 +78,24 @@
             </div>
             <div class="card-header bg-white py-3 border-top"><div class="text-center text-uppercase fw-bold text-muted section-label">Posts</div></div>
             <div id="postsContainer" class="card-body p-2 p-md-4">
-                <div th:if="${#lists.isEmpty(posts)}" class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
+                <div th:if="${posts == null || #lists.isEmpty(posts)}" class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
                     <i class="fa-solid fa-camera fs-1 text-muted"></i>
                     <h2 class="h4 mt-3 mb-2">No posts yet</h2>
                     <p class="text-muted mb-0">Moments you share will appear here.</p>
                 </div>
-                <div th:if="${!#lists.isEmpty(posts)}" class="row g-1 g-md-3">
+
+                <div th:if="${posts != null && !#lists.isEmpty(posts)}" class="row g-1 g-md-3">
                     <div th:each="post : ${posts}" class="col-4">
                         <div class="post-grid-item rounded-2">
-                            <th:block th:if="${!#lists.isEmpty(post.mediaList)}">
-                                <th:block th:with="firstMedia=${post.mediaList[0].filePath}">
-                                    <video th:if="${firstMedia.endsWith('.mp4') || firstMedia.endsWith('.webm')}" th:src="@{'/assets/' + ${firstMedia}}" muted></video>
-                                    <img th:if="${!firstMedia.endsWith('.mp4') && !firstMedia.endsWith('.webm')}" th:src="@{'/assets/' + ${firstMedia}}">
+                            <th:block th:if="${!post.mediaList.isEmpty()}">
+                                <th:block th:each="media, iterStat : ${post.mediaList}" th:if="${iterStat.first}">
+
+                                    <video th:if="${media.mediaType.startsWith('video/')}"
+                                           th:src="@{'/assets/' + ${media.filePath}}" muted></video>
+
+                                    <img th:if="${media.mediaType.startsWith('image/')}"
+                                         th:src="@{'/assets/' + ${media.filePath}}">
+
                                 </th:block>
                             </th:block>
                         </div>

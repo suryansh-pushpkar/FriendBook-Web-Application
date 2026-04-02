@@ -36,13 +36,12 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
 
                 .headers(headers -> headers
-                        .cacheControl(cache -> cache.disable()) //  let Spring handle the "no-cache"
+                        .cacheControl(cache -> cache.disable())
                 )
 
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
                         .addLogoutHandler((request, response, authentication) -> {
-                            // Delete the JWT cookie
                             Cookie cookie = new Cookie("jwtToken", null);
                             cookie.setPath("/");
                             cookie.setHttpOnly(true);

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>Edit Profile | FriendBook</title>
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
     <style>
@@ -69,7 +71,7 @@
 
                 <div class="mt-5 d-flex gap-3">
                     <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">Update Profile</button>
-                    <a href="/profile" class="btn btn-outline-secondary px-5 py-2">Cancel</a>
+                    <a href="javascript:void(0);" onclick="history.back(0)" class="btn btn-outline-secondary px-5 py-2">Cancel</a>
                 </div>
             </form>
         </div>
