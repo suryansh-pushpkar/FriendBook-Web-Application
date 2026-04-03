@@ -2,7 +2,9 @@ package com.friendbook.controller;
 
 import com.friendbook.entity.Post;
 import com.friendbook.service.FriendRequestService;
+import com.friendbook.service.PostService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
@@ -22,10 +24,13 @@ public class PageController {
 
     private final UserService userService;
     private FriendRequestService requestService;
+    private final PostService postService;
 
-    public PageController(UserService userService, FriendRequestService requestService) {
+
+    public PageController(UserService userService, FriendRequestService requestService,  PostService postService) {
         this.userService = userService;
         this.requestService = requestService;
+        this.postService = postService;
     }
 
     @GetMapping("/signup")
@@ -62,15 +67,17 @@ public class PageController {
         }
         return "search";
     }
+
     @GetMapping("/notifications")
     public String notifications(Model model, Principal principal) {
         String email = principal.getName();
         User currentUser = userService.findByEmail(email);
+
         model.addAttribute("pendingRequests", requestService.getPendingRequests(currentUser));
+        model.addAttribute("pendingRequestsCount", requestService.getPendingRequests(currentUser).size());
         model.addAttribute("currentUsername", currentUser.getUsernameField());
         return "notifications";
     }
-
 
     private void populateProfileModel(Model model, User user) {
         model.addAttribute("user", user);
@@ -95,7 +102,6 @@ public class PageController {
         User targetUser = userService.findByIdentifier(identifier);
         String loggedInEmail = principal.getName();
         User visitor = userService.findByEmail(loggedInEmail);
-
         boolean isOwnProfile = visitor.getId().equals(targetUser.getId());
         String status = requestService.getRelationshipStatus(visitor, targetUser);
         model.addAttribute("requestStatus", status);
@@ -105,11 +111,50 @@ public class PageController {
         model.addAttribute("postCount", targetUser.getPosts().size());
         model.addAttribute("followerCount", targetUser.getFollowers().size());
         model.addAttribute("followingCount", targetUser.getFollowing().size());
+        model.addAttribute("currentUser", visitor);
         return "profile";
     }
 
     @GetMapping("/explore")
-    public String explorePage() {
-        return "explore";
+    public String explorePage(Model model, Principal principal, @RequestParam(defaultValue = "0") int page) {
+        try {
+            if (principal == null) return "redirect:/login";
+            User currentUser = userService.findByEmail(principal.getName());
+            if (currentUser == null) return "redirect:/login";
+            Slice<Post> postsSlice = postService.getExplorePosts(currentUser, page);
+            model.addAttribute("posts", postsSlice.getContent());
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("hasNext", postsSlice.hasNext());
+            model.addAttribute("currentPage", page);
+
+            return "explore";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error";
+        }
+    }
+
+    @GetMapping("/{username}/followers")
+    public String showFollowers(@PathVariable String username, Model model, Principal principal) {
+        User targetUser = userService.findByIdentifier(username);
+        User currentUser = userService.findByEmail(principal.getName());
+
+        model.addAttribute("targetUser", targetUser);
+        model.addAttribute("users", targetUser.getFollowers());
+        model.addAttribute("title", "Followers");
+        model.addAttribute("currentUser", currentUser);
+        return "user-list";
+    }
+
+    @GetMapping("/{username}/following")
+    public String showFollowing(@PathVariable String username, Model model, Principal principal) {
+        User targetUser = userService.findByIdentifier(username);
+        User currentUser = userService.findByEmail(principal.getName());
+
+        model.addAttribute("targetUser", targetUser);
+        model.addAttribute("users", targetUser.getFollowing());
+        model.addAttribute("title", "Following");
+        model.addAttribute("currentUser", currentUser);
+        return "user-list";
     }
 }

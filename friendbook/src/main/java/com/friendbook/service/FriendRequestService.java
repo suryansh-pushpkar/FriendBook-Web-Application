@@ -62,11 +62,8 @@ public class FriendRequestService {
             request.setAccepted(true);
             request.setStatus("ACCEPTED");
             requestRepo.save(request);
-
             User sender = request.getSender();
             User receiver = request.getReceiver();
-
-            // Create mutual follow relationships
             Follow follow1 = new Follow();
             follow1.setFollower(sender);
             follow1.setFollowing(receiver);
@@ -80,12 +77,8 @@ public class FriendRequestService {
             // Update the Set collections for consistency
             sender.getFollowing().add(receiver);
             receiver.getFollowers().add(sender);
-
-            // Save the updated users to persist the collection changes
             userRepo.save(sender);
             userRepo.save(receiver);
-
-            // Update counts
             userRepo.incrementFollowing(sender.getId());
             userRepo.incrementFollowers(receiver.getId());
             userRepo.incrementFollowing(receiver.getId());

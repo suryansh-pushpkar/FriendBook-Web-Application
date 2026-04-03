@@ -5,23 +5,64 @@
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
     <meta name="_csrf" th:content="${_csrf?.token}"/>
     <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        .upload-container { max-width: 600px; margin: 40px auto; }
+        body{
+            font-family: Arial, Helvetica, sans-serif;
+            padding-bottom: 100px;
+        }
+        footer{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+        }
+        .upload-container {
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
         .upload-box {
-            border: 2px dashed #dbdbdb; border-radius: 12px;
-            padding: 60px 20px; text-align: center;
-            background: #fff; cursor: pointer; transition: 0.3s;
+            border: 2px dashed #dbdbdb;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        .upload-box:hover { background: #fafafa; border-color: #0095f6; }
+
+        .upload-box:hover {
+            background: #fafafa;
+            border-color: #0095f6;
+        }
+
         .preview-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px; margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
         }
+
         .preview-item {
-            width: 100px; height: 100px; object-fit: cover;
-            border-radius: 8px; border: 1px solid #efefef;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #efefef;
         }
-        textarea.form-control { border-radius: 12px; border: 1px solid #dbdbdb; resize: none; }
+
+        textarea.form-control {
+            border-radius: 12px;
+            border: 1px solid #dbdbdb;
+            resize: none;
+        }
+
+        footer {
+            background: gray;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -52,27 +93,32 @@
         </div>
     </div>
 </main>
+<footer>
+    <div th:replace="~{fragments/footer :: bottom-nav}"></div>
+</footer>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script th:inline="javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
         const $uploadBox = $('#uploadBox');
         const $fileInput = $('#fileInput');
         const $previewGrid = $('#previewGrid');
         let selectedFiles = [];
-        $uploadBox.on('click', function(e) {
+        $uploadBox.on('click', function (e) {
             if (e.target.id !== 'fileInput') {
                 $fileInput.click();
             }
         });
-        $fileInput.on('change', function(e) {
+        $fileInput.on('change', function (e) {
             handleFiles(Array.from(e.target.files));
         });
+
         function handleFiles(files) {
             files.forEach(file => {
                 selectedFiles.push(file);
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     let html = '';
                     if (file.type.startsWith('image/')) {
                         html = `<img src="${e.target.result}" class="preview-item">`;
@@ -84,7 +130,8 @@
                 reader.readAsDataURL(file);
             });
         }
-        $('#postForm').on('submit', function(e) {
+
+        $('#postForm').on('submit', function (e) {
             e.preventDefault();
             const $btn = $('#submitBtn');
             $btn.prop('disabled', true).text('Uploading...');
@@ -99,11 +146,11 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content') },
-                success: function(res) {
+                headers: {'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content')},
+                success: function (res) {
                     window.location.href = '/profile/' + res.username;
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.log(xhr);
                     alert('Upload failed! Error Code: ' + xhr.status + '\nMessage: ' + xhr.responseText);
                     $btn.prop('disabled', false).text('Share Post');

@@ -24,42 +24,32 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/login", "/signup", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/auth/**", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form.disable())
-                .headers(headers -> headers.cacheControl(cache -> cache.disable()))
-                .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .addLogoutHandler((request, response, authentication) -> {
-                            Cookie cookie = new Cookie("jwtToken", null);
-                            cookie.setPath("/");
-                            cookie.setHttpOnly(true);
-                            cookie.setMaxAge(0);
-                            response.addCookie(cookie);
+                .formLogin(f -> f.disable())
+                .headers(h -> h.cacheControl(c -> c.disable()))
+                .logout(l -> l.logoutUrl("/auth/logout")
+                        .addLogoutHandler((req, res, auth) -> {
+                            Cookie c = new Cookie("jwtToken", null);
+                            c.setPath("/");
+                            c.setHttpOnly(true);
+                            c.setMaxAge(0);
+                            res.addCookie(c);
                         })
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll()
+                        .logoutSuccessUrl("/login?logout").permitAll()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration c) throws Exception { return c.getAuthenticationManager(); }
     @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
+    public ModelMapper modelMapper() { return new ModelMapper(); }
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/.well-known/**", "/favicon.ico", "/assets/**", "/images/**");
+        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico");
     }
 }

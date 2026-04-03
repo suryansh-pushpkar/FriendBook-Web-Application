@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta th:if="${_csrf}" name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf}" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Explore | FriendBook</title>
+    <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background-color: #fafafa; padding-top: 60px; }
+        .feed-container { max-width: 600px; margin: 0 auto; }
+        .post-card { background: #fff; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 24px; }
+        .post-header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+        .post-header img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .post-header a { font-weight: 600; color: #262626; text-decoration: none; font-size: 0.9rem; }
+        .post-media { width: 100%; min-height: 300px; background: #efefef; }
+        .post-media img, .post-media video { width: 100%; display: block; max-height: 600px; object-fit: cover; }
+        .post-actions { padding: 8px 16px; display: flex; gap: 16px; font-size: 1.4rem; }
+        .post-actions i { cursor: pointer; transition: transform 0.1s ease; }
+        .fa-heart.liked { color: #ed4956; }
+        .post-content { padding: 0 16px 12px; }
+        .likes-count { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; }
+        .caption { margin-bottom: 4px; font-size: 0.9rem; }
+        .caption b { margin-right: 8px; }
+        .comment-item { font-size: 0.85rem; margin-bottom: 2px; }
+        .time { font-size: 0.7rem; color: #8e8e8e; text-transform: uppercase; margin-top: 8px; display: block; }
+        .comment-input-area { border-top: 1px solid #efefef; padding: 12px 16px; display: flex; align-items: center; }
+        .comment-input { border: none; outline: none; flex-grow: 1; font-size: 0.9rem; }
+        .btn-post-comment { color: #0095f6; font-weight: 600; cursor: pointer; border: none; background: none; font-size: 0.9rem; }
+        .btn-post-comment:disabled { opacity: 0.3; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: header}"></div>
+<main class="py-4">
+    <div class="container feed-container">
+        <div th:if="${posts == null || #lists.isEmpty(posts)}" class="text-center py-5">
+            <i class="fa-regular fa-compass fs-1 text-muted mb-3"></i>
+            <p class="text-muted">Follow people to see their latest posts here!</p>
+        </div>
+
+        <th:block th:each="post : ${posts}" th:if="${post != null}">
+            <div class="post-card" th:id="'post-' + ${post.id}">
+                <div class="post-header">
+                    <img th:src="${post.user != null && post.user.profileImage != null && post.user.profileImage != 'default.png'} ? @{'/assets/' + ${post.user.profileImage}} : @{'/assets/default.png'}">
+                    <a th:if="${post.user != null}" th:href="@{'/profile/' + ${post.user.usernameField}}" th:text="${post.user.usernameField}">username</a>
+                </div>
+
+                <div class="post-media">
+                    <th:block th:if="${post.mediaList != null}" th:each="media : ${post.mediaList}">
+                        <img th:if="${media.mediaType != null && media.mediaType.startsWith('image/')}" th:src="@{'/assets/' + ${media.filePath}}">
+                        <video th:if="${media.mediaType != null && media.mediaType.startsWith('video/')}" th:src="@{'/assets/' + ${media.filePath}}" controls></video>
+                    </th:block>
+                </div>
+
+                <div class="post-actions">
+                    <i class="fa-heart"
+                       th:classappend="${post.likes != null && currentUser != null && #lists.contains(post.likes.![user.id], currentUser.id)} ? 'fa-solid liked' : 'fa-regular'"
+                       th:onclick="'toggleLike(' + ${post.id} + ')'"></i>
+                    <i class="fa-regular fa-comment" th:onclick="'focusComment(' + ${post.id} + ')'"></i>
+                </div>
+
+                <div class="post-content">
+                    <span class="likes-count" th:id="'likes-count-' + ${post.id}"
+                          th:text="${post.likes != null ? #lists.size(post.likes) : 0} + ' likes'">0 likes</span>
+                    <div class="caption">
+                        <b th:if="${post.user != null}" th:text="${post.user.usernameField}">username</b>
+                        <span th:text="${post.caption}">caption</span>
+                    </div>
+
+                    <div th:id="'comment-list-' + ${post.id}" class="mt-2">
+                        <th:block th:if="${post.comments != null}">
+                            <div th:each="comment : ${post.comments}" class="comment-item">
+                                <b th:if="${comment.user != null}" th:text="${comment.user.usernameField}">user</b>
+                                <span th:text="${comment.text}">comment</span>
+                            </div>
+                        </th:block>
+                    </div>
+
+                    <span class="time" th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'dd MMMM yyyy') : ''}">Date</span>
+                </div>
+
+                <div class="comment-input-area">
+                    <input type="text" th:id="'comment-input-' + ${post.id}" class="comment-input" placeholder="Add a comment..."
+                           th:onkeyup="'togglePostButton(' + ${post.id} + ')'">
+                    <button th:id="'comment-btn-' + ${post.id}" class="btn-post-comment" disabled
+                            th:onclick="'submitComment(' + ${post.id} + ')'">Post</button>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</main>
+<footer><div th:replace="~{fragments/footer :: bottom-nav}"></div></footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:inline="javascript">
+    function toggleLike(postId) {
+        const header = $("meta[name='_csrf_header']").attr("content");
+        const token = $("meta[name='_csrf']").attr("content");
+        const $icon = $(`#post-${postId} .fa-heart`);
+
+        $.ajax({
+            url: `/posts/${postId}/like`,
+            type: 'POST',
+            beforeSend: function(xhr) {
+                if (header && token) xhr.setRequestHeader(header, token);
+            },
+            success: function(data) {
+                if (data.liked) {
+                    $icon.removeClass('fa-regular').addClass('fa-solid liked');
+                } else {
+                    $icon.removeClass('fa-solid liked').addClass('fa-regular');
+                }
+                $(`#likes-count-${postId}`).text(data.count + ' likes');
+            }
+        });
+    }
+
+    function focusComment(postId) {
+        $(`#comment-input-${postId}`).focus();
+    }
+
+    function togglePostButton(postId) {
+        const val = $(`#comment-input-${postId}`).val();
+        $(`#comment-btn-${postId}`).prop('disabled', !val.trim());
+    }
+
+    function submitComment(postId) {
+        const $input = $(`#comment-input-${postId}`);
+        const textValue = $input.val();
+        const header = $("meta[name='_csrf_header']").attr("content");
+        const token = $("meta[name='_csrf']").attr("content");
+
+        $.ajax({
+            url: `/posts/${postId}/comment`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ text: textValue }),
+            beforeSend: function(xhr) {
+                if (header && token) xhr.setRequestHeader(header, token);
+            },
+            success: function(comment) {
+                const newCommentHtml = `<div class="comment-item"><b>${comment.username}</b> <span>${comment.text}</span></div>`;
+                $(`#comment-list-${postId}`).append(newCommentHtml);
+                $input.val('');
+                togglePostButton(postId);
+            },
+            error: function() {
+                alert("Error posting comment.");
+            }
+        });
+    }
+</script>
+</body>
+</html>

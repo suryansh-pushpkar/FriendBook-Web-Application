@@ -16,7 +16,7 @@
         .profile-avatar-fallback {
             display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, #f09433, #dc2743 55%, #bc1888);
-            color: #fff; font-size: 3.5rem; font-weight: 700;
+            color: #fff; font-size: 3.5rem; font-weight: 700; text-decoration: none;
         }
         .section-label { letter-spacing: 0.18em; font-size: 0.8rem; }
         .post-grid-item { aspect-ratio: 1 / 1; overflow: hidden; position: relative; cursor: pointer; background-color: #efefef; }
@@ -26,87 +26,130 @@
             .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video { width: 120px; height: 120px; }
             .profile-avatar-fallback { font-size: 2.5rem; }
         }
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: header}"></div>
 <main class="py-5">
-    <div class="container-fluid">
+    <div class="container">
         <section class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="card-body p-4 p-lg-5">
                 <div class="row g-4 g-lg-5 align-items-center">
                     <div class="col-md-4">
                         <div class="profile-avatar-wrap">
-                            <th:block th:with="isVid=${user.profileImage != null && (user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}">
-                                <video th:if="${isVid}" th:src="@{'/assets/' + ${user.profileImage}}" class="profile-avatar-video" autoplay muted loop></video>
-                                <img th:if="${!isVid && user.profileImage != null && user.profileImage != 'default.png'}" th:src="@{'/assets/' + ${user.profileImage}}" class="profile-avatar-image" alt="Profile">
-                                <div th:if="${user.profileImage == null || user.profileImage == 'default.png'}" class="profile-avatar-fallback" th:text="${user.usernameField != null ? user.usernameField.substring(0,1).toUpperCase() : 'F'}">F</div>
+                            <th:block th:with="hasImage=${user.profileImage != null && user.profileImage != '' && user.profileImage != 'default.png'}">
+
+                                <video th:if="${hasImage && (user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}"
+                                       th:src="@{'/assets/' + ${user.profileImage}}"
+                                       class="profile-avatar-video" autoplay muted loop></video>
+
+                                <img th:if="${hasImage && !(user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}"
+                                     th:src="@{'/assets/' + ${user.profileImage}}"
+                                     class="profile-avatar-image" alt="Profile">
+
+                                <div th:if="${!hasImage}" class="profile-avatar-fallback"
+                                     th:text="${user.usernameField != null ? user.usernameField.substring(0,1).toUpperCase() : 'F'}">
+                                    F
+                                </div>
                             </th:block>
                         </div>
                     </div>
+
                     <div class="col-md-8">
                         <div th:replace="~{fragments/profile-actions :: profile-buttons(${user}, ${isOwnProfile}, ${requestStatus})}"></div>
+
                         <div class="row row-cols-3 g-3 mb-4 text-center text-md-start">
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="post-count" class="fw-bold fs-5" th:text="${postCount}">0</div><div class="text-muted small">Posts</div></div></div>
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="follower-count" class="fw-bold fs-5" th:text="${followerCount}">0</div><div class="text-muted small">Followers</div></div></div>
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="following-count" class="fw-bold fs-5" th:text="${followingCount}">0</div><div class="text-muted small">Following</div></div></div>
+                            <div class="col">
+                                <div class="bg-light border rounded-4 p-3 h-100">
+                                    <div id="post-count" class="fw-bold fs-5" th:text="${postCount}">0</div>
+                                    <div class="text-muted small">Posts</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <a th:href="@{'/profile/' + ${user.usernameField} + '/followers'}" class="text-decoration-none text-dark">
+                                    <div class="bg-light border rounded-4 p-3 h-100">
+                                        <div id="follower-count" class="fw-bold fs-5" th:text="${followerCount}">0</div>
+                                        <div class="text-muted small">Followers</div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col">
+                                <a th:href="@{'/profile/' + ${user.usernameField} + '/following'}" class="text-decoration-none text-dark">
+                                    <div class="bg-light border rounded-4 p-3 h-100">
+                                        <div id="following-count" class="fw-bold fs-5" th:text="${followingCount}">0</div>
+                                        <div class="text-muted small">Following</div>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
-                        <div class="fw-bold fs-5 mb-1" id="display-fullname" th:text="${user.fullName}">Friend Book</div>
-                        <div class="text-muted mb-4" id="display-email" th:text="${user.email}">user@example.com</div>
+
+                        <div class="fw-bold fs-5 mb-1" id="display-fullname" th:text="${user.fullName}">Full Name</div>
+                        <div class="text-muted mb-4" id="display-email" th:text="${user.email}">email@example.com</div>
+
                         <div class="row g-3">
-                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div><div id="display-songs" th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div></div></div></div>
-                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div><div id="display-books" th:text="${user.favBooks ?: 'Add favorite books'}">Books</div></div></div></div>
-                            <div class="col-lg-4"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div><div id="display-places" th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div></div></div></div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body p-3">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Songs</div>
+                                        <div class="small" id="display-songs" th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body p-3">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Books</div>
+                                        <div class="small" id="display-books" th:text="${user.favBooks ?: 'Add favorite books'}">Books</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card bg-light border-0 rounded-4 h-100">
+                                    <div class="card-body p-3">
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Places</div>
+                                        <div class="small" id="display-places" th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card-header bg-white py-3 border-top"><div class="text-center text-uppercase fw-bold text-muted section-label">Posts</div></div>
+
+            <div class="card-header bg-white py-3 border-top">
+                <div class="text-center text-uppercase fw-bold text-muted section-label">
+                    <i class="fa-solid fa-grid-3x3 me-2"></i>Posts
+                </div>
+            </div>
             <div id="postsContainer" class="card-body p-2 p-md-4">
-                <div th:if="${posts == null || #lists.isEmpty(posts)}" class="border border-2 border-light-subtle rounded-4 p-5 text-center bg-light">
-                    <i class="fa-solid fa-camera fs-1 text-muted"></i>
-                    <h2 class="h4 mt-3 mb-2">No posts yet</h2>
-                    <p class="text-muted mb-0">Moments you share will appear here.</p>
-                </div>
-                <div th:if="${posts != null && !#lists.isEmpty(posts)}" class="row g-1 g-md-3">
-                    <div th:each="post : ${posts}" class="col-4">
-                        <div class="post-grid-item rounded-2">
-                            <th:block th:if="${!post.mediaList.isEmpty()}">
-                                <th:block th:each="media, iterStat : ${post.mediaList}" th:if="${iterStat.first}">
-                                    <video th:if="${media.mediaType.startsWith('video/')}" th:src="@{'/assets/' + ${media.filePath}}" muted></video>
-                                    <img th:if="${media.mediaType.startsWith('image/')}" th:src="@{'/assets/' + ${media.filePath}}">
-                                </th:block>
-                            </th:block>
-                        </div>
-                    </div>
-                </div>
+                <div th:replace="~{fragments/post-fragment :: post-grid(posts=${posts}, currentUser=${currentUser})}"></div>
             </div>
         </section>
     </div>
 </main>
-<footer><div th:replace="~{fragments/footer :: bottom-nav}"></div></footer>
+
+<footer>
+    <div th:replace="~{fragments/footer :: bottom-nav}"></div>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<div th:replace="~{fragments/post-fragment :: post-scripts}"></div>
+
 <script th:inline="javascript">
     function refreshProfileStats() {
-        const username = /*[[${user.usernameField}]]*/ '';
+        // Use the dot-safe identifier
+        const identifier = [[${user.email}]];
         $.ajax({
-            url: '/auth/profile/' + username,
+            url: '/profile/api/' + encodeURIComponent(identifier),
             type: 'GET',
-            success: function(data) {
-                if(data) {
+            success: function (data) {
+                if (data) {
                     $('#follower-count').text(data.followerCount || 0);
                     $('#following-count').text(data.followingCount || 0);
                     $('#post-count').text(data.postCount || 0);
-                    $('#display-fullname').text(data.fullName);
-                    $('#display-songs').text(data.favSongs || 'Add favorite songs');
-                    $('#display-books').text(data.favBooks || 'Add favorite books');
-                    $('#display-places').text(data.favPlaces || 'Add favorite places');
                 }
-            },
-            error: function(err) {
-                console.error("Error refreshing stats", err);
             }
         });
     }

@@ -21,12 +21,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.equals("/favicon.ico") || path.startsWith("/assets/") || path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/");
+        return path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/") || path.startsWith("/assets/") || path.equals("/favicon.ico") || path.equals("/error");
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String requestedRoute = request.getRequestURI();
-        if (requestedRoute.equals("/auth/login") || requestedRoute.equals("/auth/signup")) {
+        String path = request.getServletPath();
+        if (path.equals("/auth/login") || path.equals("/auth/signup") || path.equals("/login") || path.equals("/signup") || path.equals("/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,15 +47,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 jwtUtil.validateToken(token);
                 String username = jwtUtil.extractClaims(token).getSubject();
                 if (username != null) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             } catch (Exception e) {
-                Cookie cookie = new Cookie("jwtToken", null);
-                cookie.setPath("/");
-                cookie.setMaxAge(0);
-                response.addCookie(cookie);
+                Cookie c = new Cookie("jwtToken", null);
+                c.setPath("/");
+                c.setMaxAge(0);
+                response.addCookie(c);
             }
         }
         filterChain.doFilter(request, response);
