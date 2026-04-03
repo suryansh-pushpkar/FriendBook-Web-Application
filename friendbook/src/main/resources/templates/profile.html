@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta th:if="${_csrf}" name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf}" name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title th:text="${user.fullName + ' | FriendBook'}">Profile | FriendBook</title>
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
@@ -24,19 +26,13 @@
             .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video { width: 120px; height: 120px; }
             .profile-avatar-fallback { font-size: 2.5rem; }
         }
-
-        footer{
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-        }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: header}"></div>
 <main class="py-5">
-    <div class="container">
+    <div class="container-fluid">
         <section class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="card-body p-4 p-lg-5">
                 <div class="row g-4 g-lg-5 align-items-center">
@@ -50,28 +46,18 @@
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-                            <h1 class="h2 fw-light mb-0" th:text="${user.usernameField}">friendbook</h1>
-                            <div th:if="${isOwnProfile}">
-                                <a th:href="@{/settings/profile}" class="btn btn-outline-dark btn-sm px-3 py-2 fw-semibold">Edit profile</a>
-                            </div>
-                            <div th:unless="${isOwnProfile}" class="d-flex gap-2">
-                                <button th:if="${!isFollowing}" class="btn btn-primary btn-sm px-4 py-2 fw-bold" th:onclick="'toggleFollow(this, ' + ${user.id} + ')'">Follow</button>
-                                <button th:if="${isFollowing}" class="btn btn-light border btn-sm px-4 py-2 fw-bold text-dark" th:onclick="'toggleFollow(this, ' + ${user.id} + ')'">Unfollow</button>
-<!--                                <button class="btn btn-light border btn-sm px-4 py-2 fw-bold">Message</button>-->
-                            </div>
-                        </div>
+                        <div th:replace="~{fragments/profile-actions :: profile-buttons(${user}, ${isOwnProfile}, ${requestStatus})}"></div>
                         <div class="row row-cols-3 g-3 mb-4 text-center text-md-start">
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${postCount}">0</div><div class="text-muted small">Posts</div></div></div>
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${followerCount}">0</div><div class="text-muted small">Followers</div></div></div>
-                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div class="fw-bold fs-5" th:text="${followingCount}">0</div><div class="text-muted small">Following</div></div></div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="post-count" class="fw-bold fs-5" th:text="${postCount}">0</div><div class="text-muted small">Posts</div></div></div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="follower-count" class="fw-bold fs-5" th:text="${followerCount}">0</div><div class="text-muted small">Followers</div></div></div>
+                            <div class="col"><div class="bg-light border rounded-4 p-3 h-100"><div id="following-count" class="fw-bold fs-5" th:text="${followingCount}">0</div><div class="text-muted small">Following</div></div></div>
                         </div>
-                        <div class="fw-bold fs-5 mb-1" th:text="${user.fullName}">Friend Book</div>
-                        <div class="text-muted mb-4" th:text="${user.email}">user@example.com</div>
+                        <div class="fw-bold fs-5 mb-1" id="display-fullname" th:text="${user.fullName}">Friend Book</div>
+                        <div class="text-muted mb-4" id="display-email" th:text="${user.email}">user@example.com</div>
                         <div class="row g-3">
-                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div><div th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div></div></div></div>
-                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div><div th:text="${user.favBooks ?: 'Add favorite books'}">Books</div></div></div></div>
-                            <div class="col-lg-4"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div><div th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div></div></div></div>
+                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Songs</div><div id="display-songs" th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div></div></div></div>
+                            <div class="col-lg-4 col-md-6"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Books</div><div id="display-books" th:text="${user.favBooks ?: 'Add favorite books'}">Books</div></div></div></div>
+                            <div class="col-lg-4"><div class="card bg-light border-0 rounded-4 h-100"><div class="card-body"><div class="text-uppercase text-muted fw-semibold section-label mb-2">Favorite Places</div><div id="display-places" th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div></div></div></div>
                         </div>
                     </div>
                 </div>
@@ -83,19 +69,13 @@
                     <h2 class="h4 mt-3 mb-2">No posts yet</h2>
                     <p class="text-muted mb-0">Moments you share will appear here.</p>
                 </div>
-
                 <div th:if="${posts != null && !#lists.isEmpty(posts)}" class="row g-1 g-md-3">
                     <div th:each="post : ${posts}" class="col-4">
                         <div class="post-grid-item rounded-2">
                             <th:block th:if="${!post.mediaList.isEmpty()}">
                                 <th:block th:each="media, iterStat : ${post.mediaList}" th:if="${iterStat.first}">
-
-                                    <video th:if="${media.mediaType.startsWith('video/')}"
-                                           th:src="@{'/assets/' + ${media.filePath}}" muted></video>
-
-                                    <img th:if="${media.mediaType.startsWith('image/')}"
-                                         th:src="@{'/assets/' + ${media.filePath}}">
-
+                                    <video th:if="${media.mediaType.startsWith('video/')}" th:src="@{'/assets/' + ${media.filePath}}" muted></video>
+                                    <img th:if="${media.mediaType.startsWith('image/')}" th:src="@{'/assets/' + ${media.filePath}}">
                                 </th:block>
                             </th:block>
                         </div>
@@ -105,27 +85,30 @@
         </section>
     </div>
 </main>
-<footer>
-<div th:replace="~{fragments/footer :: bottom-nav}"></div>
-    </footer>
+<footer><div th:replace="~{fragments/footer :: bottom-nav}"></div></footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script th:inline="javascript">
-    async function toggleFollow(btn, userId) {
-        btn.disabled = true;
-        try {
-            const response = await fetch(`/follow/${userId}`, { method: 'POST' });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.following) {
-                    btn.innerText = "Unfollow";
-                    btn.className = "btn btn-light border btn-sm px-4 py-2 fw-bold text-dark";
-                } else {
-                    btn.innerText = "Follow";
-                    btn.className = "btn btn-primary btn-sm px-4 py-2 fw-bold";
+    function refreshProfileStats() {
+        const username = /*[[${user.usernameField}]]*/ '';
+        $.ajax({
+            url: '/auth/profile/' + username,
+            type: 'GET',
+            success: function(data) {
+                if(data) {
+                    $('#follower-count').text(data.followerCount || 0);
+                    $('#following-count').text(data.followingCount || 0);
+                    $('#post-count').text(data.postCount || 0);
+                    $('#display-fullname').text(data.fullName);
+                    $('#display-songs').text(data.favSongs || 'Add favorite songs');
+                    $('#display-books').text(data.favBooks || 'Add favorite books');
+                    $('#display-places').text(data.favPlaces || 'Add favorite places');
                 }
-                location.reload();
+            },
+            error: function(err) {
+                console.error("Error refreshing stats", err);
             }
-        } catch (e) { console.error(e); } finally { btn.disabled = false; }
+        });
     }
 </script>
 </body>

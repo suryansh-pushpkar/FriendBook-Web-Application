@@ -3,6 +3,9 @@ package com.friendbook.service;
 import java.nio.file.*;
 import java.util.*;
 
+import com.friendbook.Exception.UserNotFoundException;
+import com.friendbook.entity.FriendRequest;
+import com.friendbook.repository.FriendRequestRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,14 +28,16 @@ public class UserService {
     private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final FriendRequestRepository friendReqRepo;
 
     private final String UPLOAD_DIR = "C:/Users/Admin/Desktop/Friendbook/assets/";
 
-    public UserService(UserRepository userRepo, PostRepository postRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
+    public UserService(UserRepository userRepo, PostRepository postRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper, FriendRequestRepository FriendRequestRepository, FriendRequestRepository friendReqRepo ) {
         this.userRepo = userRepo;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
+        this.friendReqRepo = friendReqRepo;
     }
 
     public Set<User> searchUsers(String query) {
@@ -55,27 +60,30 @@ public class UserService {
                 .orElseGet(() -> userRepo.findByEmail(identifier)
                         .orElseThrow(() -> new RuntimeException("User not found: " + identifier)));
     }
+
 @Transactional
-    public boolean toggleFollow(Long targetUserId, String currentUserName){
+    public Map<String, Object> toggleFollow(Long targetUserId, String currentUserName){
         User currentUser = userRepo.findByEmail(currentUserName).orElseThrow(() -> new RuntimeException(" user not found: " + currentUserName));
         User targetUser = userRepo.findById(targetUserId).orElseThrow(() -> new RuntimeException("Target user not found: " + targetUserId));
         if(currentUser.getId().equals(targetUser.getId())){
             throw new RuntimeException("Cannot follow yourself");
         }
-        boolean isNowFollowing;
-        if(currentUser.getFollowing().contains(targetUser)){
+    FriendRequest request = new FriendRequest();
+    if(currentUser.getFollowing().contains(targetUser)){
             currentUser.getFollowing().remove(targetUser);
             targetUser.getFollowers().remove(currentUser);
-            isNowFollowing = false;
         } else {
-            currentUser.getFollowing().add(targetUser);
-            targetUser.getFollowers().add(currentUser);
-            isNowFollowing = true;
+            request.setSender(currentUser);
+            request.setReceiver(targetUser);
+            request.setStatus("pending");
+            request.setAccepted(false);
+        friendReqRepo.save(request);
         }
-        userRepo.save(currentUser);
-        return isNowFollowing;
+    Map<String, Object> response = new HashMap<>();
+    response.put("status", "" + (currentUser.getFollowing().contains(targetUser) ? "following" : "not_following"));
+    response.put("followerCount", targetUser.getFollowers().size());
+    return response;
     }
-
 
 
     @Transactional
@@ -101,6 +109,7 @@ public class UserService {
             return userRepo.save(user);
         });
     }
+
 
     private String saveFile(MultipartFile file) throws Exception {
         Path uploadPath = Paths.get(UPLOAD_DIR);
@@ -142,7 +151,7 @@ public class UserService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepo.findByEmail(email);
+    public User findByEmail(String email) {
+        return userRepo.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User Not Found"));
     }
 }

@@ -37,7 +37,8 @@ public class User implements UserDetails {
 
     @Column(unique = true, nullable = false)
     private String email;
-
+    private int followerCount;
+    private int followingCount;
     @Column(nullable = false)
     private String password;
 
@@ -91,6 +92,22 @@ public class User implements UserDetails {
     @Override
     public boolean isAccountNonLocked() {
         return true;
+    }
+
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
+
+    public int getFollowingCount() {
+        return followingCount;
+    }
+
+    public void setFollowingCount(int followingCount) {
+        this.followingCount = followingCount;
     }
 
     @Override

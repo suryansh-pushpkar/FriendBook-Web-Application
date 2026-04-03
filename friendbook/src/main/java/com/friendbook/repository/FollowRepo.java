@@ -20,8 +20,6 @@ public interface FollowRepo extends JpaRepository<Follow, Long> {
     List<Follow> findByFollowing(User following);
 
     List<Follow> findByFollower(User follower);
-
-
     Optional<Follow> findByFollowerAndFollowing(User follower, User following);
     boolean existsByFollowerAndFollowing(User follower, User following);
 

@@ -1,39 +1,66 @@
 <!DOCTYPE html>
-<div xmlns:th="http://www.thymeleaf.org">
-
-
-<div th:fragment="profile-buttons(targetUser, isOwnProfile, isFollowing)">
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="profile-buttons(targetUser, isOwnProfile, requestStatus)">
     <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-
         <h1 class="h2 fw-light mb-0" th:text="${targetUser.usernameField}">username</h1>
-
         <div th:if="${isOwnProfile}">
             <a th:href="@{/settings/profile}" class="btn btn-outline-dark btn-sm px-4 py-2 fw-semibold">
                 <i class="fa-solid fa-user-pen me-1"></i> Edit Profile
             </a>
         </div>
-
-        <div th:unless="${isOwnProfile}" class="d-flex gap-2">
-
-            <button th:if="${!isFollowing}"
-                    type="button"
-                    class="btn btn-primary btn-sm px-4 py-2 fw-bold"
-                    th:onclick="'toggleFollow(this, ' + ${targetUser.id} + ')'">
-                Follow
+        <div th:unless="${isOwnProfile}" id="follow-section" class="d-flex gap-2">
+            <button type="button"
+                    id="mainToggleBtn"
+                    th:data-userid="${targetUser.id}"
+                    th:class="${requestStatus == 'PENDING' ? 'btn btn-secondary btn-sm px-4 py-2 fw-bold' :
+                              (requestStatus == 'ACCEPTED' ? 'btn btn-light border btn-sm px-4 py-2 fw-bold text-dark' :
+                              'btn btn-primary btn-sm px-4 py-2 fw-bold')}"
+                    th:onclick="'handleToggle(this, ' + ${targetUser.id} + ')'">
+                <th:block th:switch="${requestStatus}">
+                    <span th:case="'PENDING'">Request Sent</span>
+                    <span th:case="'ACCEPTED'">Unfollow</span>
+                    <span th:case="*">Follow</span>
+                </th:block>
             </button>
-
-            <button th:if="${isFollowing}"
-                    type="button"
-                    class="btn btn-light border btn-sm px-4 py-2 fw-bold text-dark"
-                    th:onclick="'toggleFollow(this, ' + ${targetUser.id} + ')'">
-                Unfollow
-            </button>
-
-
         </div>
-
     </div>
-</div>
 
-
+    <script th:inline="javascript">
+        if (typeof handleToggle !== 'function') {
+            function handleToggle(btn, userId) {
+                const $btn = $(btn);
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: `/follow/${userId}`,
+                    type: 'POST',
+                    beforeSend: function(xhr) {
+                        if (csrfHeader && csrfToken) xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function(data) {
+                        if (data.status === 'PENDING') {
+                            $btn.attr('class', 'btn btn-secondary btn-sm px-4 py-2 fw-bold').html('<span>Request Sent</span>');
+                        } else if (data.status === 'ACCEPTED') {
+                            $btn.attr('class', 'btn btn-light border btn-sm px-4 py-2 fw-bold text-dark').html('<span>Unfollow</span>');
+                        } else {
+                            $btn.attr('class', 'btn btn-primary btn-sm px-4 py-2 fw-bold').html('<span>Follow</span>');
+                        }
+                        if (data.followerCount !== undefined) {
+                            $('#follower-count').text(data.followerCount);
+                        }
+                    },
+                    error: function() {
+                        alert("Error processing request.");
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            }
+        }
+    </script>
 </div>
+</body>
+</html>

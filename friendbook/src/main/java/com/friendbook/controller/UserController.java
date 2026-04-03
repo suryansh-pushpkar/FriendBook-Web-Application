@@ -53,8 +53,7 @@ public class UserController {
         jwtCookie.setMaxAge(3600*60);
         response.addCookie(jwtCookie);
 
-        User user = userService.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findByEmail(dto.getEmail());
 
         UserResponseDTO userProfile = new UserResponseDTO();
         userProfile.setId(user.getId());

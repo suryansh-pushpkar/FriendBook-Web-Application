@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta th:if="${_csrf}" name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf}" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="current-username" th:content="${currentUsername}"/>
+    <title>Notifications | FriendBook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        .avatar-img { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 1px solid #eee; }
+    </style>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/navbar :: header}"></div>
+<main class="container py-5">
+    <h3 class="mb-4">Friend Requests</h3>
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div th:if="${#lists.isEmpty(pendingRequests)}" class="text-center p-5 bg-white rounded-4 shadow-sm border">
+                <p class="text-muted mb-0">No new follow requests.</p>
+            </div>
+            <div th:each="req : ${pendingRequests}" th:if="${req != null && req.sender != null}" th:id="'req-' + ${req.id}"
+                 class="d-flex align-items-center justify-content-between p-3 mb-2 bg-white rounded-4 shadow-sm border">
+                <div class="d-flex align-items-center gap-3">
+                    <img th:src="${req.sender.profileImage != null && req.sender.profileImage != 'default.png'} ? @{'/assets/' + ${req.sender.profileImage}} : @{'/assets/default.png'}"
+                         class="avatar-img" alt="Profile">
+                    <div>
+                        <strong th:text="${req.sender.usernameField}">Username</strong>
+                        <div class="small text-muted">wants to follow you</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-sm px-4 fw-bold" th:onclick="'handleRequest(' + ${req.id} + ', true)'">Confirm</button>
+                    <button class="btn btn-light border btn-sm px-4 fw-bold" th:onclick="'handleRequest(' + ${req.id} + ', false)'">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    function handleRequest(id, accept) {
+        const $container = $('#req-' + id);
+        const header = $("meta[name='_csrf_header']").attr("content");
+        const token = $("meta[name='_csrf']").attr("content");
+
+        $container.find('button').prop('disabled', true);
+        $.ajax({
+            url: '/request/respond',
+            type: 'POST',
+            data: { requestId: id, accept: accept },
+            beforeSend: function(xhr) {
+                if (header && token) {
+                    xhr.setRequestHeader(header, token);
+                }
+            },
+            success: function() {
+                $container.fadeOut(300, function() {
+                    $(this).remove();
+                    if ($('.shadow-sm.border').length === 0) {
+                        // Redirect to profile page after accepting request
+                        window.location.href = '/profile/' + $('meta[name="current-username"]').attr('content') || '/';
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                alert("Could not process request. Please try again.");
+                $container.find('button').prop('disabled', false);
+            }
+        });
+    }
+</script>
+</body>
+</html>

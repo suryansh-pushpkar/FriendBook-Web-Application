@@ -1,5 +1,4 @@
 package com.friendbook;
-
 import com.friendbook.utility.JwtAuthenticationFilter;
 import jakarta.servlet.http.Cookie;
 import org.modelmapper.ModelMapper;
@@ -17,28 +16,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     private final JwtAuthenticationFilter jwtAuthFilter;
-
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter){
         this.jwtAuthFilter = jwtAuthFilter;
     }
-
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/login", "/signup", "/css/**", "/js/**", "/images/**", "/").permitAll()
+                        .requestMatchers("/auth/**", "/login", "/signup", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())
-
-                .headers(headers -> headers
-                        .cacheControl(cache -> cache.disable())
-                )
-
+                .headers(headers -> headers.cacheControl(cache -> cache.disable()))
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
                         .addLogoutHandler((request, response, authentication) -> {
@@ -53,28 +43,23 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 )
-
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
     }
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/.well-known/**", "/favicon.ico");
+        return (web) -> web.ignoring().requestMatchers("/.well-known/**", "/favicon.ico", "/assets/**", "/images/**");
     }
 }

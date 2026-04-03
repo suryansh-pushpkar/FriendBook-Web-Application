@@ -29,8 +29,7 @@ public class PostController {
     public ResponseEntity<?> createPost(@RequestParam("caption") String caption,
                                         @RequestParam("files") List<MultipartFile> files,
                                         Principal principal) throws Exception {
-        User currentUser = userService.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = userService.findByEmail(principal.getName());
         Post savedPost = postService.createPost(currentUser, caption, files);
 
         return ResponseEntity.ok(Map.of("status", "success",
@@ -39,8 +38,7 @@ public class PostController {
 
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long postId, Principal principal) {
-        User user = userService.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findByEmail(principal.getName());
         Map<String, Object> response = postService.toggleLike(user, postId);
 
         return ResponseEntity.ok(response);
@@ -50,8 +48,7 @@ public class PostController {
     public ResponseEntity<?> addComment(@PathVariable Long postId,
                                         @RequestBody Map<String, String> payload,
                                         Principal principal) {
-        User user = userService.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findByEmail(principal.getName());
         Comment savedComment = postService.addComment(user, postId, payload.get("text"));
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Comment added successfully");
