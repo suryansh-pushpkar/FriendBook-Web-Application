@@ -7,26 +7,81 @@
     <title th:text="${user.fullName + ' | FriendBook'}">Profile | FriendBook</title>
     <th:block th:replace="~{fragments/styles :: common-head}"></th:block>
     <style>
-        body { background-color: #fafafa; padding-bottom: 100px !important; }
-        .profile-avatar-wrap { display: flex; justify-content: center; align-items: center; position: relative; }
+        body {
+            background-color: #fafafa;
+            padding-bottom: 100px !important;
+        }
+
+        .profile-avatar-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
         .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video {
-            width: 170px; height: 170px; border-radius: 50%; object-fit: cover;
-            border: 4px solid #fff; box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.08);
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.08);
         }
+
         .profile-avatar-fallback {
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: linear-gradient(135deg, #f09433, #dc2743 55%, #bc1888);
-            color: #fff; font-size: 3.5rem; font-weight: 700; text-decoration: none;
+            color: #fff;
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-decoration: none;
         }
-        .section-label { letter-spacing: 0.18em; font-size: 0.8rem; }
-        .post-grid-item { aspect-ratio: 1 / 1; overflow: hidden; position: relative; cursor: pointer; background-color: #efefef; }
-        .post-grid-item img, .post-grid-item video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-        .post-grid-item:hover img, .post-grid-item:hover video { transform: scale(1.05); filter: brightness(0.8); }
+
+        .section-label {
+            letter-spacing: 0.18em;
+            font-size: 0.8rem;
+        }
+
+        .post-grid-item {
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background-color: #efefef;
+        }
+
+        .post-grid-item img, .post-grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .post-grid-item:hover img, .post-grid-item:hover video {
+            transform: scale(1.05);
+            filter: brightness(0.8);
+        }
+
         @media (max-width: 767px) {
-            .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video { width: 120px; height: 120px; }
-            .profile-avatar-fallback { font-size: 2.5rem; }
+            .profile-avatar-image, .profile-avatar-fallback, .profile-avatar-video {
+                width: 120px;
+                height: 120px;
+            }
+
+            .profile-avatar-fallback {
+                font-size: 2.5rem;
+            }
         }
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000; }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -38,12 +93,8 @@
                 <div class="row g-4 g-lg-5 align-items-center">
                     <div class="col-md-4">
                         <div class="profile-avatar-wrap">
-                            <th:block th:with="hasImage=${user.profileImage != null && user.profileImage != '' && user.profileImage != 'default.png'}">
-
-                                <video th:if="${hasImage && (user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}"
-                                       th:src="@{'/assets/' + ${user.profileImage}}"
-                                       class="profile-avatar-video" autoplay muted loop></video>
-
+                            <th:block
+                                    th:with="hasImage=${user.profileImage != null && user.profileImage != '' && user.profileImage != 'default.png'}">
                                 <img th:if="${hasImage && !(user.profileImage.endsWith('.mp4') || user.profileImage.endsWith('.webm'))}"
                                      th:src="@{'/assets/' + ${user.profileImage}}"
                                      class="profile-avatar-image" alt="Profile">
@@ -67,7 +118,8 @@
                                 </div>
                             </div>
                             <div class="col">
-                                <a th:href="@{'/profile/' + ${user.usernameField} + '/followers'}" class="text-decoration-none text-dark">
+                                <a th:href="@{'/profile/' + ${user.usernameField} + '/followers'}"
+                                   class="text-decoration-none text-dark">
                                     <div class="bg-light border rounded-4 p-3 h-100">
                                         <div id="follower-count" class="fw-bold fs-5" th:text="${followerCount}">0</div>
                                         <div class="text-muted small">Followers</div>
@@ -75,9 +127,11 @@
                                 </a>
                             </div>
                             <div class="col">
-                                <a th:href="@{'/profile/' + ${user.usernameField} + '/following'}" class="text-decoration-none text-dark">
+                                <a th:href="@{'/profile/' + ${user.usernameField} + '/following'}"
+                                   class="text-decoration-none text-dark">
                                     <div class="bg-light border rounded-4 p-3 h-100">
-                                        <div id="following-count" class="fw-bold fs-5" th:text="${followingCount}">0</div>
+                                        <div id="following-count" class="fw-bold fs-5" th:text="${followingCount}">0
+                                        </div>
                                         <div class="text-muted small">Following</div>
                                     </div>
                                 </a>
@@ -91,24 +145,33 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="card bg-light border-0 rounded-4 h-100">
                                     <div class="card-body p-3">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Songs</div>
-                                        <div class="small" id="display-songs" th:text="${user.favSongs ?: 'Add favorite songs'}">Songs</div>
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Songs
+                                        </div>
+                                        <div class="small" id="display-songs"
+                                             th:text="${user.favSongs ?: 'Add favorite songs'}">Songs
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
                                 <div class="card bg-light border-0 rounded-4 h-100">
                                     <div class="card-body p-3">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Books</div>
-                                        <div class="small" id="display-books" th:text="${user.favBooks ?: 'Add favorite books'}">Books</div>
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Books
+                                        </div>
+                                        <div class="small" id="display-books"
+                                             th:text="${user.favBooks ?: 'Add favorite books'}">Books
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="card bg-light border-0 rounded-4 h-100">
                                     <div class="card-body p-3">
-                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Places</div>
-                                        <div class="small" id="display-places" th:text="${user.favPlaces ?: 'Add favorite places'}">Places</div>
+                                        <div class="text-uppercase text-muted fw-semibold section-label mb-2">Places
+                                        </div>
+                                        <div class="small" id="display-places"
+                                             th:text="${user.favPlaces ?: 'Add favorite places'}">Places
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -153,6 +216,25 @@
             }
         });
     }
+
+    // Handle follower/following modal
+    $(document).on('click', 'a[href*="/followers"], a[href*="/following"]', function (e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        const isFollowers = url.includes('/followers');
+        const title = isFollowers ? 'Followers' : 'Following';
+
+        $('#followModalLabel').text(title);
+
+        $.get(url, function (data) {
+            $('#followModalBody').html(data);
+            const modal = new bootstrap.Modal(document.getElementById('followModal'));
+            modal.show();
+        });
+    });
 </script>
+
+<div th:replace="~{fragments/follow-fragment :: follow-modal}"></div>
+
 </body>
 </html>

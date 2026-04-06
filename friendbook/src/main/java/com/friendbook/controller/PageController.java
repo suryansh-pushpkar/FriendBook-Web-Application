@@ -146,15 +146,17 @@ public class PageController {
         return "user-list";
     }
 
-    @GetMapping("/{username}/following")
-    public String showFollowing(@PathVariable String username, Model model, Principal principal) {
-        User targetUser = userService.findByIdentifier(username);
-        User currentUser = userService.findByEmail(principal.getName());
+    @GetMapping("/profile/{identifier}/followers")
+    public String getFollowersData(@PathVariable String identifier, Model model) {
+        User user = userService.findByIdentifier(identifier);
+        model.addAttribute("users", user.getFollowers());
+        return "fragments/follow-fragment :: user-list";
+    }
 
-        model.addAttribute("targetUser", targetUser);
-        model.addAttribute("users", targetUser.getFollowing());
-        model.addAttribute("title", "Following");
-        model.addAttribute("currentUser", currentUser);
-        return "user-list";
+    @GetMapping("/profile/{identifier}/following")
+    public String getFollowingData(@PathVariable String identifier, Model model) {
+        User user = userService.findByIdentifier(identifier);
+        model.addAttribute("users", user.getFollowing());
+        return "fragments/follow-fragment :: user-list";
     }
 }

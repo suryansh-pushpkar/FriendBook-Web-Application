@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+
+<div th:fragment="follow-modal" class="modal fade" id="followModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg rounded-4"
+             style="            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+ color: white;">
+            <div class="modal-header border-bottom border-light justify-content-between align-items-center py-2 px-3"
+                 style="background: rgba(255,255,255,0.1);">
+                <div style="width: 32px;"></div>
+                <h6 class="modal-title fw-bold mb-0" id="followModalLabel" style="color: white;">List</h6>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"
+                        style="font-size: 0.7rem;"></button>
+            </div>
+            <div class="modal-body p-0" style="min-height: 200px; max-height: 450px; background: rgba(255,255,255,0.9);"
+                 id="followModalBody">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:fragment="user-list(users)">
+
+    <div th:if="${users != null && !#lists.isEmpty(users)}">
+        <div th:each="u : ${users}"
+             class="user-item d-flex align-items-center justify-content-between px-3 py-2 transition-all">
+            <div class="d-flex align-items-center gap-3">
+                <div class="position-relative">
+                    <img th:src="${u.profileImage != null && u.profileImage != 'default.png'} ? @{'/assets/' + ${u.profileImage}} : @{'/assets/default.png'}"
+                         class="rounded-circle border border-light shadow-sm"
+                         style="width: 44px; height: 44px; object-fit: cover;"
+                         alt="profile">
+                </div>
+                <div class="d-flex flex-column">
+                    <a th:href="@{'/profile/' + ${u.usernameField}}"
+                       class="text-decoration-none text-dark fw-bold mb-0"
+                       style="font-size: 0.9rem; line-height: 1.2;"
+                       th:text="${u.usernameField}">username</a>
+                    <span class="text-muted small" style="font-size: 0.8rem;" th:text="${u.fullName}">Full Name</span>
+                </div>
+            </div>
+
+            <div>
+                <a th:href="@{'/profile/' + ${u.usernameField}}"
+                   class="btn btn-light btn-sm fw-bold px-3 rounded-3 text-decoration-none"
+                   style="font-size: 0.75rem; border: 1px solid #dbdbdb;">
+                    View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${users == null || #lists.isEmpty(users)}" class="text-center py-5">
+        <div class="mb-3">
+            <i class="fa-solid fa-user-plus text-secondary opacity-25" style="font-size: 3rem;"></i>
+        </div>
+        <p class="text-secondary small fw-medium mb-0">No users found in this list.</p>
+    </div>
+</div>
+
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+
+</body>
+</html>
