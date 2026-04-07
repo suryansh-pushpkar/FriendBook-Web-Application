@@ -24,3 +24,4 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/favicon.ico").setViewName("forward:/favicon.svg");
     }
 }
+
